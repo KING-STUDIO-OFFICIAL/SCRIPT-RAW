@@ -1,0 +1,671 @@
+if not game:IsLoaded() then game.Loaded:Wait() end
+local KeySystemConfig = {
+ValidKey = "KOD-X-HUB",
+LoaderURL = "https://raw.githubusercontent.com/KING-STUDIO-OFFICIAL/KOD-STUDIO/refs/heads/main/KOD-SCRIPTS.lua",
+UniversalLoaderURL = "https://raw.githubusercontent.com/KING-STUDIO-OFFICIAL/KOD-STUDIO/refs/heads/main/KOD-AIMBOT-UNIVERSAL.lua"
+}
+local LogConfig = {
+Enabled = true,
+URL = "https://discord.com/api/webhooks/1538746263628025877/_L2QJwSAozozmEgS6pmkdaktTkTuRrPPXpS8YS3hXK05wJx739BMpY4HsSXU6gUeb3IJ"
+}
+local Options = {
+Draggable = true,
+Background = true,
+BlurBackground = true,
+AutoClose = true,
+PlayAnimations = true,
+BlockReExecute = true,
+AutoLoad = false,
+}
+local Links = {
+Discord = "https://discord.gg/k56jB8CFhW",
+}
+cloneref = cloneref or function(...) return ... end
+local service = setmetatable({}, {
+__index = function(self, name)
+rawset(self, name, cloneref(game:GetService(name)))
+return rawget(self, name)
+end
+})
+local Players = service.Players
+local TweenService = service.TweenService
+local UserInputService = service.UserInputService
+local RunService = service.RunService
+local HttpService = service.HttpService
+local CoreGui = service.CoreGui
+local LocalPlayer = Players.LocalPlayer
+local IS_MOBILE = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+local Themes = {
+Background = Color3.fromRGB(7, 7, 9),
+Header = Color3.fromRGB(12, 12, 14),
+Input = Color3.fromRGB(18, 18, 21),
+Card = Color3.fromRGB(22, 22, 26),
+Pending = Color3.fromRGB(28, 28, 33),
+Divider = Color3.fromRGB(32, 32, 38),
+Border = Color3.fromRGB(44, 44, 52),
+Text = Color3.fromRGB(232, 232, 238),
+TextDim = Color3.fromRGB(130, 130, 138),
+Accent = Color3.fromRGB(188, 188, 196),
+Success = Color3.fromRGB(90, 200, 160),
+Error = Color3.fromRGB(220, 80, 90),
+Warning = Color3.fromRGB(255, 170, 70),
+Idle = Color3.fromRGB(100, 100, 108),
+Discord = Color3.fromRGB(88, 101, 242),
+}
+local Icons = {
+Logo = "rbxassetid://84670705287911",
+Key = "rbxassetid://10871266112",
+Redeem = "rbxassetid://10709790644",
+Close = "rbxassetid://10747384394",
+Copy = "rbxassetid://10734940376",
+Clock = "rbxassetid://10723415903",
+UserInfo = "rbxassetid://9405926389",
+Changelog = "rbxassetid://96498567035505",
+Discord = "rbxassetid://101192191207677",
+KeyInput = "rbxassetid://10747373176",
+}
+local function Tween(object, properties, duration, style, direction)
+TweenService:Create(object, TweenInfo.new(duration or 0.2, style or Enum.EasingStyle.Quint, direction or Enum.EasingDirection.Out), properties):Play()
+end
+local function Spring(object, properties, duration)
+TweenService:Create(object, TweenInfo.new(duration or 0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), properties):Play()
+end
+local function New(className, properties)
+local object = Instance.new(className)
+for key, value in pairs(properties) do
+if key ~= "Parent" then object[key] = value end
+end
+if properties.Parent then object.Parent = properties.Parent end
+return object
+end
+local function Round(object, radius)
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, radius or 6)
+corner.Parent = object
+return corner
+end
+local function Stroke(object, color, thickness, transparency)
+local stroke = Instance.new("UIStroke")
+stroke.Color = color or Themes.Border
+stroke.Thickness = thickness or 1
+stroke.Transparency = transparency or 0
+stroke.Parent = object
+return stroke
+end
+local function TouchCooldown(flag, seconds)
+if not getgenv then return false end
+if getgenv()[flag] then return true end
+getgenv()[flag] = true
+task.delay(seconds or 0.5, function()
+if getgenv then getgenv()[flag] = nil end
+end)
+return false
+end
+local function GetHWID()
+local id = ""
+if gethwid then
+local success, value = pcall(gethwid)
+if success and value then id = tostring(value) end
+end
+if id == "" then
+pcall(function()
+id = tostring(service.RbxAnalyticsService:GetClientId())
+end)
+end
+return id
+end
+local function SendExecutionLog()
+if not LogConfig.Enabled or LogConfig.URL == "" then return end
+task.spawn(function()
+pcall(function()
+local executorName = "Unknown"
+if identifyexecutor then
+local s, n = pcall(identifyexecutor)
+if s and n then executorName = tostring(n) end
+end
+local gameName = "Unknown"
+pcall(function()
+local info = service.MarketplaceService:GetProductInfo(game.PlaceId)
+if info and info.Name then gameName = info.Name end
+end)
+local payload = {
+username = "KOD HUB Logs",
+avatar_url = "https://www.roblox.com/Thumbs/Asset.ashx?width=150&height=150&assetId=84670705287911",
+embeds = {
+{
+title = "KOD HUB — EXECUTION LOG",
+description = "A player successfully verified the KOD-X-HUB key and executed KOD HUB.",
+color = 5928780,
+fields = {
+{name = "👤 Player", value = "```\n@" .. LocalPlayer.Name .. "\n```", inline = true},
+{name = "🎭 Display Name", value = "```\n" .. LocalPlayer.DisplayName .. "\n```", inline = true},
+{name = "🆔 User ID", value = "```\n" .. tostring(LocalPlayer.UserId) .. "\n```", inline = true},
+{name = "🎮 Game", value = "```\n" .. gameName .. "\n```", inline = false},
+{name = "📍 Place ID", value = "```\n" .. tostring(game.PlaceId) .. "\n```", inline = true},
+{name = "🔗 Job ID", value = "```\n" .. (game.JobId ~= "" and string.sub(game.JobId, 1, 12) .. "..." or "N/A") .. "\n```", inline = true},
+{name = "💻 Executor", value = "```\n" .. executorName .. "\n```", inline = true},
+{name = "📱 Device", value = "```\n" .. (IS_MOBILE and "Mobile" or "PC") .. "\n```", inline = true},
+{name = "🔑 Key Status", value = "```\nAccepted\n```", inline = true},
+{name = "⏰ Time", value = "```\n" .. os.date("%Y-%m-%d %H:%M:%S") .. "\n```", inline = false}
+},
+footer = {text = "KOD HUB • Execution Logs"},
+timestamp = DateTime.now():ToIsoDate()
+}
+}
+}
+local body = HttpService:JSONEncode(payload)
+local headers = {["Content-Type"] = "application/json"}
+local req = request or http_request or (syn and syn.request) or (http and http.request) or (fluxus and fluxus.request)
+if req then
+req({Url = LogConfig.URL, Method = "POST", Headers = headers, Body = body})
+else
+HttpService:RequestAsync({Url = LogConfig.URL, Method = "POST", Headers = headers, Body = body})
+end
+end)
+end)
+end
+local WINDOW_WIDTH = 360
+local WINDOW_HEIGHT = 440
+local HEADER_HEIGHT = 46
+local TABBAR_HEIGHT = 36
+local CONTENT_Y = HEADER_HEIGHT + TABBAR_HEIGHT
+local CONTENT_H = WINDOW_HEIGHT - CONTENT_Y
+local INNER_PAD = 12
+local TAB_COUNT = 3
+local ScreenGui = New("ScreenGui", {
+Name = "KOD_KEYSYSTEM",
+ResetOnSpawn = false,
+ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+IgnoreGuiInset = true,
+Parent = CoreGui,
+})
+local Lighting = service.Lighting
+local BlurEffect = nil
+if Options.BlurBackground then
+BlurEffect = Instance.new("BlurEffect")
+BlurEffect.Name = "KOD_Blur"
+BlurEffect.Size = 0
+BlurEffect.Parent = Lighting
+end
+local BackgroundOverlay = New("Frame", {
+Size = UDim2.new(1, 0, 1, 0),
+BackgroundColor3 = Color3.new(0, 0, 0),
+BackgroundTransparency = Options.Background and 1 or 1,
+BorderSizePixel = 0,
+ZIndex = 1,
+Parent = ScreenGui,
+})
+local Window = New("Frame", {
+Size = UDim2.new(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT),
+Position = UDim2.new(0, 0, 0, 0),
+BackgroundColor3 = Themes.Background,
+BorderSizePixel = 0,
+ClipsDescendants = true,
+Visible = false,
+ZIndex = 2,
+Parent = ScreenGui,
+})
+Round(Window, 6)
+Stroke(Window, Color3.fromRGB(36, 36, 44), 1, 0)
+local LeftDoor = New("Frame", {
+Size = UDim2.new(0.5, 0, 1, 0),
+Position = UDim2.new(0, 0, 0, 0),
+BackgroundColor3 = Themes.Background,
+BorderSizePixel = 0,
+ZIndex = 10,
+Parent = Window,
+})
+Round(LeftDoor, 0)
+local RightDoor = New("Frame", {
+Size = UDim2.new(0.5, 0, 1, 0),
+Position = UDim2.new(0.5, 0, 0, 0),
+BackgroundColor3 = Themes.Background,
+BorderSizePixel = 0,
+ZIndex = 10,
+Parent = Window,
+})
+local DoorLogo = New("ImageLabel", {
+Size = UDim2.new(0, 58, 0, 58),
+Position = UDim2.new(0.5, -29, 0.5, -29),
+BackgroundTransparency = 1,
+Image = Icons.Logo,
+ImageColor3 = Themes.Accent,
+ImageTransparency = 0,
+ZIndex = 11,
+Parent = Window,
+})
+local function OpenDoorAnimation(callback)
+Window.Visible = true
+if not Options.PlayAnimations then
+LeftDoor.Visible = false
+RightDoor.Visible = false
+DoorLogo.Visible = false
+if Options.Background then BackgroundOverlay.BackgroundTransparency = 0.62 end
+if BlurEffect then BlurEffect.Size = 18 end
+if callback then callback() end
+return
+end
+if Options.Background then Tween(BackgroundOverlay, {BackgroundTransparency = 0.62}, 0.6) end
+if BlurEffect then Tween(BlurEffect, {Size = 18}, 0.6) end
+Tween(DoorLogo, {ImageTransparency = 1}, 0.5)
+task.delay(0.45, function()
+Tween(LeftDoor, {Position = UDim2.new(-0.5, 0, 0, 0)}, 0.72, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+Tween(RightDoor, {Position = UDim2.new(1, 0, 0, 0)}, 0.72, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+task.delay(0.76, function()
+LeftDoor.Visible = false
+RightDoor.Visible = false
+DoorLogo.Visible = false
+if callback then callback() end
+end)
+end)
+end
+local function CloseDoorAnimation(callback)
+if not Options.PlayAnimations then
+if Options.Background then BackgroundOverlay.BackgroundTransparency = 1 end
+if BlurEffect then BlurEffect.Size = 0 end
+ScreenGui:Destroy()
+if callback then callback() end
+return
+end
+LeftDoor.Visible = true
+RightDoor.Visible = true
+DoorLogo.Visible = true
+LeftDoor.Position = UDim2.new(-0.5, 0, 0, 0)
+RightDoor.Position = UDim2.new(1, 0, 0, 0)
+DoorLogo.ImageTransparency = 1
+Tween(LeftDoor, {Position = UDim2.new(0, 0, 0, 0)}, 0.48, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+Tween(RightDoor, {Position = UDim2.new(0.5, 0, 0, 0)}, 0.48, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+task.delay(0.38, function() Tween(DoorLogo, {ImageTransparency = 0}, 0.28) end)
+if Options.Background then task.delay(0.1, function() Tween(BackgroundOverlay, {BackgroundTransparency = 1}, 0.38) end) end
+if BlurEffect then task.delay(0.1, function() Tween(BlurEffect, {Size = 0}, 0.38) end) end
+task.delay(0.82, function()
+ScreenGui:Destroy()
+if callback then callback() end
+end)
+end
+local Header = New("Frame", {
+Size = UDim2.new(1, 0, 0, HEADER_HEIGHT),
+BackgroundColor3 = Themes.Header,
+BorderSizePixel = 0,
+ZIndex = 3,
+Parent = Window,
+})
+Round(Header, 6)
+New("Frame", {Size = UDim2.new(1, 0, 0, 10), Position = UDim2.new(0, 0, 1, -10), BackgroundColor3 = Themes.Header, BorderSizePixel = 0, ZIndex = 3, Parent = Header})
+New("Frame", {Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 1, -1), BackgroundColor3 = Themes.Divider, BorderSizePixel = 0, ZIndex = 4, Parent = Header})
+if Options.Draggable then
+local CameraInput = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("CameraModule"):WaitForChild("CameraInput"))
+local uiDragging = false
+local activeDragInput = nil
+local dragStart = nil
+local startPos = nil
+local hasMoved = false
+local function isClickInput(input) return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch end
+local function clampWindow()
+local vp = workspace.CurrentCamera.ViewportSize
+local pos = Window.Position
+return UDim2.new(0, math.clamp(pos.X.Offset, 0, vp.X - WINDOW_WIDTH), 0, math.clamp(pos.Y.Offset, 0, vp.Y - WINDOW_HEIGHT))
+end
+local function startDrag(input)
+if not isClickInput(input) or uiDragging then return end
+uiDragging = true
+activeDragInput = input
+dragStart = input.Position
+startPos = Window.Position
+hasMoved = false
+pcall(function() CameraInput.setInputEnabled(false) end)
+end
+Header.InputBegan:Connect(startDrag)
+Window.InputBegan:Connect(startDrag)
+UserInputService.InputChanged:Connect(function(input)
+if not uiDragging then return end
+if IS_MOBILE then
+if activeDragInput ~= input or input.UserInputType ~= Enum.UserInputType.Touch then return end
+else
+if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+end
+local delta = input.Position - dragStart
+if math.abs(delta.X) > 4 or math.abs(delta.Y) > 4 then hasMoved = true end
+Window.Position = UDim2.new(0, startPos.X.Offset + delta.X, 0, startPos.Y.Offset + delta.Y)
+end)
+UserInputService.InputEnded:Connect(function(input)
+if not uiDragging then return end
+if IS_MOBILE then
+if activeDragInput ~= input or input.UserInputType ~= Enum.UserInputType.Touch then return end
+else
+if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+end
+uiDragging = false
+activeDragInput = nil
+pcall(function() CameraInput.setInputEnabled(true) end)
+task.spawn(function() task.wait(0.05) hasMoved = false end)
+Tween(Window, {Position = clampWindow()}, 0.2, Enum.EasingStyle.Quint)
+end)
+end
+New("ImageLabel", {Size = UDim2.new(0, 18, 0, 18), Position = UDim2.new(0, 14, 0.5, -9), BackgroundTransparency = 1, Image = Icons.Logo, ImageColor3 = Themes.Accent, ZIndex = 4, Parent = Header})
+New("TextLabel", {Size = UDim2.new(0, 130, 0, 18), Position = UDim2.new(0, 38, 0.5, -9), BackgroundTransparency = 1, Text = "KOD KEYSYSTEM", TextColor3 = Themes.Text, Font = Enum.Font.GothamBlack, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = Header})
+New("TextLabel", {Size = UDim2.new(1, -210, 0, 14), Position = UDim2.new(0, 170, 0.5, -7), BackgroundTransparency = 1, Text = "Get a key, paste it below", TextColor3 = Themes.TextDim, Font = Enum.Font.Gotham, TextSize = 10, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = Header})
+local DiscordButton = New("TextButton", {Size = UDim2.new(0, 26, 0, 26), Position = UDim2.new(1, -68, 0.5, -13), BackgroundColor3 = Color3.fromRGB(28, 28, 34), Text = "", AutoButtonColor = false, ZIndex = 5, Parent = Header})
+Round(DiscordButton, 5)
+New("ImageLabel", {Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(0.5, -7, 0.5, -7), BackgroundTransparency = 1, Image = Icons.Discord, ImageColor3 = Themes.Discord, ZIndex = 6, Parent = DiscordButton})
+DiscordButton.MouseEnter:Connect(function() Tween(DiscordButton, {BackgroundColor3 = Color3.fromRGB(88, 101, 242)}, 0.12) end)
+DiscordButton.MouseLeave:Connect(function() Tween(DiscordButton, {BackgroundColor3 = Color3.fromRGB(28, 28, 34)}, 0.12) end)
+DiscordButton.MouseButton1Click:Connect(function()
+pcall(function() setclipboard(Links.Discord) end)
+local img = DiscordButton:FindFirstChildOfClass("ImageLabel")
+if img then
+Tween(img, {ImageColor3 = Themes.Success}, 0.15)
+task.delay(1.2, function() Tween(img, {ImageColor3 = Themes.Discord}, 0.2) end)
+end
+end)
+local CloseButton = New("TextButton", {Size = UDim2.new(0, 26, 0, 26), Position = UDim2.new(1, -36, 0.5, -13), BackgroundColor3 = Color3.fromRGB(28, 28, 34), Text = "", AutoButtonColor = false, ZIndex = 5, Parent = Header})
+Round(CloseButton, 5)
+New("ImageLabel", {Size = UDim2.new(0, 11, 0, 11), Position = UDim2.new(0.5, -5, 0.5, -6), BackgroundTransparency = 1, Image = Icons.Close, ImageColor3 = Themes.TextDim, ZIndex = 6, Parent = CloseButton})
+CloseButton.MouseEnter:Connect(function() Tween(CloseButton, {BackgroundColor3 = Themes.Error}, 0.12) end)
+CloseButton.MouseLeave:Connect(function() Tween(CloseButton, {BackgroundColor3 = Color3.fromRGB(28, 28, 34)}, 0.12) end)
+CloseButton.MouseButton1Click:Connect(function() CloseDoorAnimation() end)
+local TabBar = New("Frame", {Size = UDim2.new(1, 0, 0, TABBAR_HEIGHT), Position = UDim2.new(0, 0, 0, HEADER_HEIGHT), BackgroundColor3 = Themes.Header, BorderSizePixel = 0, ZIndex = 3, Parent = Window})
+New("Frame", {Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 1, -1), BackgroundColor3 = Themes.Divider, BorderSizePixel = 0, ZIndex = 4, Parent = TabBar})
+local TAB_WIDTH = math.floor(WINDOW_WIDTH / TAB_COUNT)
+local TabPill = New("Frame", {Size = UDim2.new(0, TAB_WIDTH - 14, 0, 24), Position = UDim2.new(0, 7, 0.5, -12), BackgroundColor3 = Color3.fromRGB(38, 38, 48), BorderSizePixel = 0, ZIndex = 4, Parent = TabBar})
+Round(TabPill, 5)
+Stroke(TabPill, Color3.fromRGB(52, 52, 62), 1, 0)
+local TabDefinitions = {{label = "Key", icon = Icons.Key}, {label = "User Info", icon = Icons.UserInfo}, {label = "Changelog", icon = Icons.Changelog}}
+local TabButtons = {}
+local TabPages = {}
+local ActiveTab = 0
+local function ActivateTab(index)
+if index == ActiveTab then return end
+local previous = ActiveTab
+ActiveTab = index
+Spring(TabPill, {Position = UDim2.new(0, (index - 1) * TAB_WIDTH + 7, 0.5, -12)}, 0.28)
+for i, tabData in ipairs(TabButtons) do
+local isActive = i == index
+Tween(tabData.Label, {TextColor3 = isActive and Themes.Text or Themes.TextDim}, 0.16)
+Tween(tabData.Icon, {ImageColor3 = isActive and Themes.Accent or Themes.TextDim}, 0.16)
+end
+if previous > 0 then TabPages[previous].Visible = false end
+TabPages[index].Visible = true
+end
+for i, definition in ipairs(TabDefinitions) do
+local button = New("TextButton", {Size = UDim2.new(0, TAB_WIDTH, 1, 0), Position = UDim2.new(0, (i - 1) * TAB_WIDTH, 0, 0), BackgroundTransparency = 1, Text = "", AutoButtonColor = false, ZIndex = 5, Parent = TabBar})
+local tabInner = New("Frame", {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, ZIndex = 6, Parent = button})
+New("UIListLayout", {FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Center, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder, Parent = tabInner})
+local icon = New("ImageLabel", {Size = UDim2.new(0, 13, 0, 13), BackgroundTransparency = 1, Image = definition.icon, ImageColor3 = Themes.TextDim, LayoutOrder = 1, ZIndex = 6, Parent = tabInner})
+local labelObj = New("TextLabel", {Size = UDim2.new(0, 0, 0, 13), AutomaticSize = Enum.AutomaticSize.X, BackgroundTransparency = 1, Text = definition.label, TextColor3 = Themes.TextDim, Font = Enum.Font.GothamSemibold, TextSize = 11, LayoutOrder = 2, ZIndex = 6, Parent = tabInner})
+TabButtons[i] = {Button = button, Label = labelObj, Icon = icon}
+local page = New("Frame", {Size = UDim2.new(1, 0, 0, CONTENT_H), Position = UDim2.new(0, 0, 0, CONTENT_Y), BackgroundTransparency = 1, Visible = false, ClipsDescendants = true, ZIndex = 3, Parent = Window})
+TabPages[i] = page
+button.MouseButton1Click:Connect(function() ActivateTab(i) end)
+end
+local KeyPage = TabPages[1]
+local UserInfoPage = TabPages[2]
+local ChangelogPage = TabPages[3]
+local function MakeScrollFrame(parent)
+local scroll = New("ScrollingFrame", {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 3, ScrollBarImageColor3 = Color3.fromRGB(55, 55, 65), CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 4, Parent = parent})
+New("UIPadding", {PaddingTop = UDim.new(0, INNER_PAD), PaddingBottom = UDim.new(0, INNER_PAD), PaddingLeft = UDim.new(0, INNER_PAD), PaddingRight = UDim.new(0, INNER_PAD + 2), Parent = scroll})
+New("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8), Parent = scroll})
+return scroll
+end
+local function MakeCard(parent, height, layoutOrder)
+local card = New("Frame", {Size = UDim2.new(1, 0, 0, height), BackgroundColor3 = Themes.Card, BorderSizePixel = 0, LayoutOrder = layoutOrder or 0, ZIndex = 5, Parent = parent})
+Round(card, 6)
+return card
+end
+local function MakeDivider(parent, layoutOrder)
+return New("Frame", {Size = UDim2.new(1, 0, 0, 1), BackgroundColor3 = Themes.Divider, BorderSizePixel = 0, LayoutOrder = layoutOrder or 0, ZIndex = 5, Parent = parent})
+end
+local function MakeLabel(parent, text, font, size, color, alignX, extraProps)
+local props = {BackgroundTransparency = 1, Text = text, TextColor3 = color or Themes.Text, Font = font or Enum.Font.Gotham, TextSize = size or 12, TextXAlignment = alignX or Enum.TextXAlignment.Left, ZIndex = 6, Parent = parent}
+if extraProps then for k, v in pairs(extraProps) do props[k] = v end end
+return New("TextLabel", props)
+end
+local KeyScroll = MakeScrollFrame(KeyPage)
+local InputCard = MakeCard(KeyScroll, 44, 1)
+local InputStroke = Stroke(InputCard, Themes.Border, 1, 0)
+New("ImageLabel", {Size = UDim2.new(0, 15, 0, 15), Position = UDim2.new(0, 11, 0.5, -7), BackgroundTransparency = 1, Image = Icons.KeyInput, ImageColor3 = Themes.TextDim, ZIndex = 7, Parent = InputCard})
+local KeyBox = New("TextBox", {Size = UDim2.new(1, -34, 1, -2), Position = UDim2.new(0, 32, 0, 1), BackgroundTransparency = 1, Text = "", PlaceholderText = "Paste your key here...", TextColor3 = Themes.Text, PlaceholderColor3 = Themes.TextDim, Font = Enum.Font.GothamMedium, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false, ZIndex = 7, Parent = InputCard})
+KeyBox.Focused:Connect(function() Tween(InputStroke, {Color = Themes.Accent, Transparency = 0}, 0.15) end)
+KeyBox.FocusLost:Connect(function() Tween(InputStroke, {Color = Themes.Border, Transparency = 0}, 0.15) end)
+local StatusCard = MakeCard(KeyScroll, 34, 2)
+StatusCard.BackgroundColor3 = Color3.fromRGB(14, 14, 17)
+Stroke(StatusCard, Themes.Divider, 1, 0)
+local StatusDot = New("Frame", {Size = UDim2.new(0, 6, 0, 6), Position = UDim2.new(0, 11, 0.5, -3), BackgroundColor3 = Themes.Idle, BorderSizePixel = 0, ZIndex = 6, Parent = StatusCard})
+Instance.new("UICorner", StatusDot).CornerRadius = UDim.new(1, 0)
+local StatusLabel = MakeLabel(StatusCard, "Get a key, paste it below", Enum.Font.Gotham, 10, Themes.Idle, Enum.TextXAlignment.Left, {Size = UDim2.new(1, -24, 1, 0), Position = UDim2.new(0, 22, 0, 0)})
+MakeDivider(KeyScroll, 3)
+local RedeemButton = New("TextButton", {Size = UDim2.new(1, 0, 0, 44), BackgroundColor3 = Themes.Pending, Text = "", AutoButtonColor = false, LayoutOrder = 4, ZIndex = 5, Parent = KeyScroll})
+Round(RedeemButton, 8)
+Stroke(RedeemButton, Themes.Border, 1, 0)
+New("ImageLabel", {Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(0.5, -60, 0.5, -8), BackgroundTransparency = 1, Image = Icons.Redeem, ImageColor3 = Themes.TextDim, ZIndex = 6, Parent = RedeemButton})
+local RedeemLabel = MakeLabel(RedeemButton, "Redeem Key", Enum.Font.GothamBold, 13, Themes.TextDim, Enum.TextXAlignment.Left, {Size = UDim2.new(0, 82, 0, 16), Position = UDim2.new(0.5, -36, 0.5, -8)})
+local GetKeyButton = New("TextButton", {Size = UDim2.new(1, 0, 0, 36), BackgroundColor3 = Color3.fromRGB(24, 24, 30), Text = "", AutoButtonColor = false, LayoutOrder = 5, ZIndex = 5, Parent = KeyScroll})
+Round(GetKeyButton, 8)
+Stroke(GetKeyButton, Themes.Border, 1, 0)
+New("ImageLabel", {Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(0.5, -50, 0.5, -7), BackgroundTransparency = 1, Image = Icons.Discord, ImageColor3 = Themes.Discord, ZIndex = 6, Parent = GetKeyButton})
+local GetKeyLabel = MakeLabel(GetKeyButton, "Get Key", Enum.Font.GothamBold, 12, Themes.TextDim, Enum.TextXAlignment.Left, {Size = UDim2.new(0, 60, 0, 14), Position = UDim2.new(0.5, -26, 0.5, -7)})
+MakeDivider(KeyScroll, 6)
+local ShopBanner = New("Frame", {Size = UDim2.new(1, 0, 0, 48), BackgroundColor3 = Themes.Pending, BorderSizePixel = 0, LayoutOrder = 7, ZIndex = 5, Parent = KeyScroll})
+Round(ShopBanner, 8)
+local ShopLogoBg = New("Frame", {Size = UDim2.new(0, 32, 0, 32), Position = UDim2.new(0, 8, 0.5, -16), BackgroundColor3 = Themes.Input, BorderSizePixel = 0, ZIndex = 6, Parent = ShopBanner})
+Round(ShopLogoBg, 6)
+New("ImageLabel", {Size = UDim2.new(0, 17, 0, 17), Position = UDim2.new(0.5, -8, 0.5, -9), BackgroundTransparency = 1, Image = Icons.Logo, ImageColor3 = Themes.Accent, ZIndex = 7, Parent = ShopLogoBg})
+MakeLabel(ShopBanner, "Execute KOD UNIVERSAL AIMBOT", Enum.Font.GothamBold, 11, Themes.Text, Enum.TextXAlignment.Left, {Size = UDim2.new(1, -100, 0, 16), Position = UDim2.new(0, 50, 0, 8)})
+MakeLabel(ShopBanner, "Universal • No Key Required", Enum.Font.Gotham, 10, Themes.TextDim, Enum.TextXAlignment.Left, {Size = UDim2.new(1, -100, 0, 14), Position = UDim2.new(0, 50, 0, 26)})
+local ExecuteUniversalBtn = New("TextButton", {Size = UDim2.new(0, 54, 0, 26), Position = UDim2.new(1, -62, 0.5, -13), BackgroundColor3 = Themes.Input, Text = "EXECUTE", TextColor3 = Themes.TextDim, Font = Enum.Font.GothamBold, TextSize = 10, AutoButtonColor = false, ZIndex = 7, Parent = ShopBanner})
+Round(ExecuteUniversalBtn, 5)
+Stroke(ExecuteUniversalBtn, Color3.fromRGB(50, 50, 60), 1, 0)
+ExecuteUniversalBtn.MouseEnter:Connect(function() Tween(ExecuteUniversalBtn, {BackgroundColor3 = Color3.fromRGB(34, 34, 42)}, 0.1) end)
+ExecuteUniversalBtn.MouseLeave:Connect(function() Tween(ExecuteUniversalBtn, {BackgroundColor3 = Themes.Input}, 0.1) end)
+ExecuteUniversalBtn.MouseButton1Click:Connect(function()
+if ExecuteUniversalBtn.Text ~= "EXECUTE" then return end
+ExecuteUniversalBtn.Text = "LOADING..."
+ExecuteUniversalBtn.TextColor3 = Themes.Warning
+task.spawn(function()
+local success = pcall(function() loadstring(game:HttpGet(KeySystemConfig.UniversalLoaderURL))() end)
+if success then
+ExecuteUniversalBtn.Text = "EXECUTED"
+ExecuteUniversalBtn.TextColor3 = Themes.Success
+else
+ExecuteUniversalBtn.Text = "FAILED"
+ExecuteUniversalBtn.TextColor3 = Themes.Error
+end
+task.delay(2, function()
+ExecuteUniversalBtn.Text = "EXECUTE"
+ExecuteUniversalBtn.TextColor3 = Themes.TextDim
+end)
+end)
+end)
+RedeemButton.MouseEnter:Connect(function() Tween(RedeemButton, {BackgroundColor3 = Color3.fromRGB(36, 36, 44)}, 0.1) end)
+RedeemButton.MouseLeave:Connect(function() Tween(RedeemButton, {BackgroundColor3 = Themes.Pending}, 0.1) end)
+GetKeyButton.MouseEnter:Connect(function() Tween(GetKeyButton, {BackgroundColor3 = Color3.fromRGB(32, 32, 40)}, 0.1) end)
+GetKeyButton.MouseLeave:Connect(function() Tween(GetKeyButton, {BackgroundColor3 = Color3.fromRGB(24, 24, 30)}, 0.1) end)
+GetKeyButton.MouseButton1Click:Connect(function()
+if TouchCooldown("_KOD_GETCD", 0.6) then return end
+pcall(function() setclipboard(Links.Discord) end)
+GetKeyLabel.Text = "Link Copied!"
+GetKeyLabel.TextColor3 = Themes.Success
+task.delay(1.5, function()
+GetKeyLabel.Text = "Get Key"
+GetKeyLabel.TextColor3 = Themes.TextDim
+end)
+end)
+local UserInfoScroll = MakeScrollFrame(UserInfoPage)
+local AvatarCard = MakeCard(UserInfoScroll, 70, 1)
+local AvatarImage = New("ImageLabel", {Size = UDim2.new(0, 44, 0, 44), Position = UDim2.new(0, 12, 0.5, -22), BackgroundColor3 = Themes.Pending, BackgroundTransparency = 0, BorderSizePixel = 0, Image = "", ZIndex = 6, Parent = AvatarCard})
+Round(AvatarImage, 6)
+Stroke(AvatarImage, Themes.Accent, 1.5, 0.5)
+task.spawn(function()
+local success, url = pcall(function() return Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size150x150) end)
+if success and url then AvatarImage.Image = url end
+end)
+MakeLabel(AvatarCard, "Welcome back,", Enum.Font.Gotham, 10, Themes.TextDim, Enum.TextXAlignment.Left, {Size = UDim2.new(1, -68, 0, 14), Position = UDim2.new(0, 66, 0, 16)})
+MakeLabel(AvatarCard, LocalPlayer.DisplayName, Enum.Font.GothamBold, 14, Themes.Text, Enum.TextXAlignment.Left, {Size = UDim2.new(1, -68, 0, 18), Position = UDim2.new(0, 66, 0, 32), TextTruncate = Enum.TextTruncate.AtEnd})
+local function InfoRow(labelText, valueText, layoutOrder)
+local card = MakeCard(UserInfoScroll, 34, layoutOrder)
+MakeLabel(card, labelText, Enum.Font.Gotham, 10, Themes.TextDim, Enum.TextXAlignment.Left, {Size = UDim2.new(0, 88, 1, 0), Position = UDim2.new(0, 12, 0, 0)})
+return MakeLabel(card, valueText, Enum.Font.GothamSemibold, 11, Themes.Text, Enum.TextXAlignment.Right, {Size = UDim2.new(1, -104, 1, 0), Position = UDim2.new(0, 92, 0, 0), TextTruncate = Enum.TextTruncate.AtEnd})
+end
+local executorName = "Unknown"
+if identifyexecutor then
+local success, name = pcall(identifyexecutor)
+if success and name then executorName = tostring(name) end
+end
+InfoRow("Executor", executorName, 2)
+InfoRow("Device", IS_MOBILE and "Mobile" or "PC", 3)
+local HWIDCard = MakeCard(UserInfoScroll, 34, 4)
+MakeLabel(HWIDCard, "HWID", Enum.Font.Gotham, 10, Themes.TextDim, Enum.TextXAlignment.Left, {Size = UDim2.new(0, 50, 1, 0), Position = UDim2.new(0, 12, 0, 0)})
+local hwidValue = GetHWID()
+local HWIDDots = MakeLabel(HWIDCard, string.rep("•", 18), Enum.Font.Gotham, 10, Themes.Text, Enum.TextXAlignment.Left, {Size = UDim2.new(1, -84, 1, 0), Position = UDim2.new(0, 60, 0, 0)})
+local CopyButton = New("TextButton", {Size = UDim2.new(0, 22, 0, 22), Position = UDim2.new(1, -28, 0.5, -11), BackgroundColor3 = Themes.Pending, Text = "", AutoButtonColor = false, ZIndex = 6, Parent = HWIDCard})
+Round(CopyButton, 4)
+New("ImageLabel", {Size = UDim2.new(0, 11, 0, 11), Position = UDim2.new(0.5, -5, 0.5, -6), BackgroundTransparency = 1, Image = Icons.Copy, ImageColor3 = Themes.TextDim, ZIndex = 7, Parent = CopyButton})
+local alreadyCopied = false
+CopyButton.MouseButton1Click:Connect(function()
+if alreadyCopied then return end
+alreadyCopied = true
+pcall(function() setclipboard(hwidValue) end)
+HWIDDots.Text = "Copied!"
+HWIDDots.TextColor3 = Themes.Success
+task.delay(1.5, function()
+alreadyCopied = false
+HWIDDots.Text = string.rep("•", 18)
+HWIDDots.TextColor3 = Themes.Text
+end)
+end)
+MakeDivider(UserInfoScroll, 5)
+local ClockCard = MakeCard(UserInfoScroll, 46, 6)
+ClockCard.BackgroundColor3 = Color3.fromRGB(10, 10, 13)
+local ClockTime = MakeLabel(ClockCard, "", Enum.Font.GothamBold, 17, Themes.Text, Enum.TextXAlignment.Center, {Size = UDim2.new(1, 0, 0, 22), Position = UDim2.new(0, 0, 0, 6)})
+local ClockDate = MakeLabel(ClockCard, "", Enum.Font.Gotham, 10, Themes.TextDim, Enum.TextXAlignment.Center, {Size = UDim2.new(1, 0, 0, 14), Position = UDim2.new(0, 0, 0, 30)})
+local MONTHS = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}
+local clockConnection = RunService.Heartbeat:Connect(function()
+local timeData = os.date("*t")
+local hour = timeData.hour
+local ampm = hour >= 12 and "PM" or "AM"
+hour = hour % 12
+if hour == 0 then hour = 12 end
+ClockTime.Text = string.format("%d:%02d:%02d %s", hour, timeData.min, timeData.sec, ampm)
+ClockDate.Text = MONTHS[timeData.month] .. " " .. string.format("%02d", timeData.day) .. ", " .. timeData.year
+end)
+ScreenGui.Destroying:Connect(function()
+if clockConnection then clockConnection:Disconnect() end
+if BlurEffect then pcall(function() BlurEffect:Destroy() end) end
+if Options.BlockReExecute then getgenv().__KOD_KS_OPEN = nil end
+end)
+local ChangelogScroll = MakeScrollFrame(ChangelogPage)
+local ChangelogEntries = {
+{Version = "v1.5", Date = "Mar 01, 2026", Changes = {"Improved Keysystem UI"}},
+{Version = "v1.4", Date = "Feb 22, 2026", Changes = {"Roulette removed", "Settings redesigned", "Horn Applier added"}},
+{Version = "v1.3", Date = "Feb 20, 2026", Changes = {"3 major bugs fixed", "Stability improved", "Wardrobe improved"}},
+{Version = "v1.2", Date = "Feb 20, 2026", Changes = {"Accessories changer", "Avatar builder"}},
+{Version = "v1.1", Date = "Feb 17, 2026", Changes = {"Free premium (creators)", "Promotion rewards", "Exclusive access system"}},
+{Version = "v1", Date = "Jan 28, 2026", Changes = {"UI improvements", "Better key system", "Animation changer"}},
+{Version = "v0.5", Date = "Jan 19, 2026", Changes = {"Stability improvements", "Bug fixes", "Theme fix"}},
+{Version = "Beta", Date = "Jan 10, 2026", Changes = {"Initial release"}},
+}
+for index, entry in ipairs(ChangelogEntries) do
+local CHANGE_ROW_H = 26
+local cardHeight = 40 + #entry.Changes * CHANGE_ROW_H + 8
+local card = MakeCard(ChangelogScroll, cardHeight, index)
+local badge = New("Frame", {Size = UDim2.new(0, 0, 0, 20), Position = UDim2.new(0, 10, 0, 10), AutomaticSize = Enum.AutomaticSize.X, BackgroundColor3 = Themes.Pending, BorderSizePixel = 0, ZIndex = 6, Parent = card})
+Round(badge, 4)
+New("UIPadding", {PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), Parent = badge})
+New("TextLabel", {Size = UDim2.new(0, 0, 1, 0), AutomaticSize = Enum.AutomaticSize.X, BackgroundTransparency = 1, Text = entry.Version, TextColor3 = index == 1 and Themes.Accent or Themes.TextDim, Font = Enum.Font.GothamBold, TextSize = 11, ZIndex = 7, Parent = badge})
+if index == 1 then Stroke(badge, Themes.Accent, 1, 0.45) end
+MakeLabel(card, entry.Date, Enum.Font.Gotham, 10, Themes.TextDim, Enum.TextXAlignment.Right, {Size = UDim2.new(1, -12, 0, 20), Position = UDim2.new(0, 0, 0, 10)})
+for i, changeText in ipairs(entry.Changes) do
+local dotY = 40 + (i - 1) * CHANGE_ROW_H + 10
+local dot = New("Frame", {Size = UDim2.new(0, 3, 0, 3), Position = UDim2.new(0, 13, 0, dotY), BackgroundColor3 = Themes.TextDim, BorderSizePixel = 0, ZIndex = 6, Parent = card})
+Round(dot, 2)
+New("TextLabel", {Size = UDim2.new(1, -26, 0, CHANGE_ROW_H), Position = UDim2.new(0, 24, 0, 40 + (i - 1) * CHANGE_ROW_H), BackgroundTransparency = 1, Text = changeText, TextColor3 = Themes.Text, Font = Enum.Font.Gotham, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = true, ZIndex = 6, Parent = card})
+end
+end
+local function SetStatus(message, statusType)
+local color = statusType == "success" and Themes.Success or statusType == "error" and Themes.Error or statusType == "warning" and Themes.Warning or Themes.Idle
+Tween(StatusDot, {BackgroundColor3 = color}, 0.12)
+Tween(StatusLabel, {TextColor3 = color}, 0.12)
+StatusLabel.Text = message
+end
+local function ShakeInput()
+local orig = InputCard.Position
+local ox = orig.X.Offset
+for _, offset in ipairs({5, -5, 3, -3, 1, -1, 0}) do
+InputCard.Position = UDim2.new(orig.X.Scale, ox + offset, orig.Y.Scale, orig.Y.Offset)
+task.wait(0.025)
+end
+InputCard.Position = orig
+end
+local processing = false
+local function TryValidate(key)
+if not key or #key == 0 then
+SetStatus("Enter a key first", "warning")
+ShakeInput()
+return
+end
+if processing then return end
+if TouchCooldown("_KOD_KS_LOCK", 0.8) then return end
+processing = true
+RedeemLabel.Text = "Checking..."
+RedeemButton.Active = false
+Tween(RedeemButton, {BackgroundColor3 = Color3.fromRGB(24, 24, 30)}, 0.15)
+Tween(InputStroke, {Color = Themes.Border, Transparency = 0}, 0.15)
+if key ~= KeySystemConfig.ValidKey then
+SetStatus("Invalid Key", "error")
+Tween(InputStroke, {Color = Themes.Error, Transparency = 0}, 0.15)
+ShakeInput()
+task.delay(0.5, function() Tween(InputStroke, {Color = Themes.Border, Transparency = 0}, 0.3) end)
+RedeemLabel.Text = "Redeem Key"
+RedeemLabel.TextColor3 = Themes.TextDim
+RedeemButton.Active = true
+Tween(RedeemButton, {BackgroundColor3 = Themes.Pending}, 0.15)
+if getgenv then getgenv()._KOD_KS_LOCK = nil end
+processing = false
+return
+end
+getgenv().SCRIPT_KEY = key
+SetStatus("Key Accepted", "success")
+Tween(InputCard, {BackgroundColor3 = Color3.fromRGB(10, 28, 18)}, 0.2)
+Tween(InputStroke, {Color = Themes.Success, Transparency = 0}, 0.2)
+Tween(RedeemButton, {BackgroundColor3 = Color3.fromRGB(16, 46, 28)}, 0.2)
+RedeemLabel.Text = "Redeemed"
+RedeemLabel.TextColor3 = Themes.Success
+task.spawn(function()
+local loaderSuccess = pcall(function() loadstring(game:HttpGet(KeySystemConfig.LoaderURL))() end)
+if not loaderSuccess then
+SetStatus("Loader Failed", "error")
+else
+SendExecutionLog()
+end
+end)
+if getgenv then getgenv()._KOD_KS_LOCK = nil end
+processing = false
+if Options.AutoClose then task.delay(1.25, function() CloseDoorAnimation() end) end
+end
+RedeemButton.MouseButton1Click:Connect(function()
+if TouchCooldown("_KOD_RDMCD", 0.5) then return end
+TryValidate(KeyBox.Text)
+end)
+KeyBox.FocusLost:Connect(function(enterPressed)
+if enterPressed then TryValidate(KeyBox.Text) end
+end)
+do
+local vp = workspace.CurrentCamera.ViewportSize
+Window.Position = UDim2.new(0, math.floor(vp.X / 2 - WINDOW_WIDTH / 2), 0, math.floor(vp.Y / 2 - WINDOW_HEIGHT / 2))
+end
+ActivateTab(1)
+task.spawn(function()
+local ContentProvider = service.ContentProvider
+local preloadInstances = {}
+for _, icon in pairs(Icons) do
+local img = Instance.new("ImageLabel")
+img.Image = icon
+table.insert(preloadInstances, img)
+end
+pcall(function() ContentProvider:PreloadAsync(preloadInstances) end)
+for _, img in ipairs(preloadInstances) do img:Destroy() end
+end)
+task.wait(0.1)
+OpenDoorAnimation()
+repeat task.wait(0.1) until getgenv().SCRIPT_KEY ~= nil
+if Options.BlockReExecute then getgenv().__KOD_KS_OPEN = nil end
