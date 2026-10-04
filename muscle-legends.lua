@@ -1,628 +1,713 @@
-local LoaderSystem = {}
-LoaderSystem.__index = LoaderSystem
-
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
 local Player = Players.LocalPlayer
 
-local function Create(className, properties, parent)
-    local instance = Instance.new(className)
-    for property, value in pairs(properties) do
-        instance[property] = value
-    end
-    if parent then
-        instance.Parent = parent
-    end
-    return instance
+local MAIN_URL = "https://raw.githubusercontent.com/KING-STUDIO-OFFICIAL/SCRIPT-RAW/refs/heads/main/Main-ml.lua"
+local BOSS_URL = "https://raw.githubusercontent.com/KING-STUDIO-OFFICIAL/SCRIPT-RAW/refs/heads/main/BOSS-ML-.lua"
+local DISCORD_URL = "https://discord.gg/hh79adY9f2"
+local HUB_TITLE = "KOD HUB"
+local HUB_SUB = "Muscle Legends"
+
+local C = {
+    bg      = Color3.fromRGB(12, 12, 12),
+    card    = Color3.fromRGB(22, 22, 22),
+    cardHov = Color3.fromRGB(30, 30, 30),
+    input   = Color3.fromRGB(18, 18, 18),
+    stroke  = Color3.fromRGB(40, 40, 40),
+    btn     = Color3.fromRGB(28, 28, 28),
+    btnHov  = Color3.fromRGB(40, 40, 40),
+    text    = Color3.fromRGB(245, 245, 245),
+    muted   = Color3.fromRGB(130, 130, 130),
+    accent  = Color3.fromRGB(240, 240, 240),
+    success = Color3.fromRGB(120, 210, 140),
+    warn    = Color3.fromRGB(240, 176, 108),
+    error   = Color3.fromRGB(240, 120, 120),
+    discord = Color3.fromRGB(114, 137, 218),
+    glowA   = Color3.fromRGB(200, 200, 200),
+    glowB   = Color3.fromRGB(30, 30, 30),
+}
+
+local IMG = {
+    FONT    = "rbxassetid://12187365364",
+    GLOW    = "rbxassetid://8992230677",
+    LOGO    = "rbxassetid://95103720591784",
+    CLOSE   = "rbxassetid://110786993356448",
+    MOON    = "rbxassetid://83380517901735",
+    SHADOW  = "rbxassetid://6014261993",
+    KEY     = "rbxassetid://96510194465420",
+    SUBMIT  = "rbxassetid://113692007244654",
+    LINK    = "rbxassetid://114238209622913",
+    DISCORD = "rbxassetid://127255077587058",
+    GAME    = "rbxassetid://74584987850498",
+}
+
+local FONT      = Font.new(IMG.FONT, Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+local FONT_BOLD = Font.new(IMG.FONT, Enum.FontWeight.Bold,    Enum.FontStyle.Normal)
+
+local FINAL_W, FINAL_H = 480, 260
+local INTRO_SIZE       = 80
+local INTRO_TIME       = 2.2
+
+local function make(class, props, parent)
+    local inst = Instance.new(class)
+    for k, v in pairs(props) do inst[k] = v end
+    if parent then inst.Parent = parent end
+    return inst
 end
 
-function LoaderSystem:CreateLoader(Config)
-    local Title = "KOD HUB"
-    local BossFarmingURL = Config.BossFarmingURL or "https://raw.githubusercontent.com/KING-STUDIO-OFFICIAL/SCRIPT-RAW/refs/heads/main/BOSS-ML-.lua"
-    local MainScriptURL = Config.MainScriptURL or "https://raw.githubusercontent.com/KING-STUDIO-OFFICIAL/SCRIPT-RAW/refs/heads/main/Main-ml.lua"
+local function tween(inst, time, props, style, dir)
+    local t = TweenService:Create(
+        inst,
+        TweenInfo.new(time, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out),
+        props
+    )
+    t:Play()
+    return t
+end
 
-    local Black       = Color3.fromRGB(8, 8, 8)
-    local DarkBlack   = Color3.fromRGB(0, 0, 0)
-    local Panel       = Color3.fromRGB(18, 18, 18)
-    local Charcoal    = Color3.fromRGB(35, 35, 35)
-    local Gray        = Color3.fromRGB(90, 90, 90)
-    local LightGray   = Color3.fromRGB(160, 160, 160)
-    local Silver      = Color3.fromRGB(200, 200, 200)
-    local White       = Color3.fromRGB(255, 255, 255)
-
-    local LoaderGui = Create("ScreenGui", {
-        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-        IgnoreGuiInset = true,
-        Name = "LoaderGui"
-    }, RunService:IsStudio() and Player.PlayerGui or 
-       (gethui and gethui() or game:GetService("CoreGui")))
-
-    local BlurBackground = Create("Frame", {
-        BackgroundColor3 = DarkBlack,
-        BackgroundTransparency = 0.25,
+local function frame(parent, x, y, w, h, color, transparency)
+    return make("Frame", {
+        Position = UDim2.new(0, x, 0, y),
+        Size = UDim2.new(0, w, 0, h),
+        BackgroundColor3 = color or C.bg,
+        BackgroundTransparency = transparency or 1,
         BorderSizePixel = 0,
+    }, parent)
+end
+
+local function text(parent, str, x, y, w, h, size, color, align, bold)
+    return make("TextLabel", {
+        Position = UDim2.new(0, x, 0, y),
+        Size = UDim2.new(0, w, 0, h),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Text = str,
+        TextSize = size,
+        TextColor3 = color or C.text,
+        TextXAlignment = align or Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        FontFace = bold and FONT_BOLD or FONT,
+    }, parent)
+end
+
+local function round(parent, radius, strokeColor, strokeTransparency)
+    make("UICorner", { CornerRadius = UDim.new(0, radius) }, parent)
+    if strokeColor then
+        make("UIStroke", {
+            Thickness = 1,
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            Color = strokeColor,
+            Transparency = strokeTransparency or 0,
+        }, parent)
+    end
+end
+
+local function icon(parent, x, y, color, image, size)
+    size = size or 16
+    local holder = frame(parent, x, y, size, size)
+    make("ImageLabel", {
+        Name = "glow",
+        Size = UDim2.new(1.6, 0, 1.6, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundTransparency = 1,
+        Image = IMG.GLOW,
+        ImageColor3 = color,
+        ImageTransparency = 0.9,
+    }, holder)
+    make("ImageLabel", {
+        Name = "img",
         Size = UDim2.new(1, 0, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        Name = "BlurBackground"
-    }, LoaderGui)
-
-    local BackgroundGradient = Create("UIGradient", {
-        Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0.0, Color3.fromRGB(40, 40, 40)),
-            ColorSequenceKeypoint.new(0.3, Color3.fromRGB(15, 15, 15)),
-            ColorSequenceKeypoint.new(0.7, Color3.fromRGB(25, 25, 25)),
-            ColorSequenceKeypoint.new(1.0, Color3.fromRGB(0, 0, 0))
-        },
-        Rotation = 45
-    }, BlurBackground)
-
-    local bgGradientTween = TweenService:Create(
-        BackgroundGradient,
-        TweenInfo.new(8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-        {Rotation = 225}
-    )
-    bgGradientTween:Play()
-
-    for i = 1, 30 do
-        local particleSize = math.random(1, 7)
-        local particle = Create("Frame", {
-            BackgroundColor3 = i <= 15 and White or (i <= 22 and Silver or Gray),
-            BackgroundTransparency = math.random(70, 92) / 100,
-            BorderSizePixel = 0,
-            Size = UDim2.new(0, particleSize, 0, particleSize),
-            Position = UDim2.new(math.random(0, 100) / 100, 0, math.random(0, 100) / 100, 0),
-            Name = "Particle" .. i
-        }, BlurBackground)
-
-        Create("UICorner", {CornerRadius = UDim.new(1, 0)}, particle)
-
-        if i <= 12 then
-            local particleGlow = Create("Frame", {
-                AnchorPoint = Vector2.new(0.5, 0.5),
-                Position = UDim2.new(0.5, 0, 0.5, 0),
-                Size = UDim2.new(1, 4, 1, 4),
-                BackgroundColor3 = particle.BackgroundColor3,
-                BackgroundTransparency = 0.9,
-                BorderSizePixel = 0,
-                ZIndex = particle.ZIndex - 1
-            }, particle)
-            Create("UICorner", {CornerRadius = UDim.new(1, 0)}, particleGlow)
-
-            local glowTween = TweenService:Create(
-                particleGlow,
-                TweenInfo.new(math.random(2, 4), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-                {BackgroundTransparency = 0.95, Size = UDim2.new(1, 8, 1, 8)}
-            )
-            glowTween:Play()
-        end
-
-        local floatSpeed = math.random(8, 30)
-        local floatTween = TweenService:Create(
-            particle,
-            TweenInfo.new(floatSpeed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-            {
-                Position = UDim2.new(math.random(0, 100) / 100, 0, math.random(0, 100) / 100, 0),
-                BackgroundTransparency = math.random(40, 95) / 100,
-                Rotation = math.random(-180, 180)
-            }
-        )
-        floatTween:Play()
-    end
-
-    local LoaderContainer = Create("Frame", {
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = Panel,
-        BackgroundTransparency = 0,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 340, 0, 220),
-        Name = "LoaderContainer"
-    }, BlurBackground)
-
-    Create("UICorner", {CornerRadius = UDim.new(0, 18)}, LoaderContainer)
-
-    local BorderStroke = Create("UIStroke", {
-        Color = White,
-        Thickness = 2,
-        Transparency = 0.15,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    }, LoaderContainer)
-
-    local BorderGradient = Create("UIGradient", {
-        Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0.0, White),
-            ColorSequenceKeypoint.new(0.5, LightGray),
-            ColorSequenceKeypoint.new(1.0, Gray)
-        },
-        Rotation = 0
-    }, BorderStroke)
-
-    local borderTween = TweenService:Create(
-        BorderGradient,
-        TweenInfo.new(4, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, false),
-        {Rotation = 360}
-    )
-    borderTween:Play()
-
-    for i = 1, 3 do
-        local glowSize = 8 + (i * 4)
-        local GlowFrame = Create("Frame", {
-            AnchorPoint = Vector2.new(0.5, 0.5),
-            Position = UDim2.new(0.5, 0, 0.5, 0),
-            Size = UDim2.new(1, glowSize, 1, glowSize),
-            BackgroundColor3 = i == 1 and White or (i == 2 and Silver or Gray),
-            BackgroundTransparency = 0.82 + (i * 0.04),
-            BorderSizePixel = 0,
-            ZIndex = LoaderContainer.ZIndex - i
-        }, BlurBackground)
-
-        Create("UICorner", {CornerRadius = UDim.new(0, 22 + (i * 2))}, GlowFrame)
-
-        local glowTween = TweenService:Create(
-            GlowFrame,
-            TweenInfo.new(2 + i, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-            {
-                BackgroundTransparency = 0.95,
-                Size = UDim2.new(1, glowSize + 8, 1, glowSize + 8)
-            }
-        )
-        glowTween:Play()
-    end
-
-    local CloseButton = Create("TextButton", {
-        Font = Enum.Font.GothamBold,
-        Text = "×",
-        TextColor3 = White,
-        TextSize = 22,
-        BackgroundColor3 = Charcoal,
-        BackgroundTransparency = 0,
-        AutoButtonColor = false,
-        BorderSizePixel = 0,
-        Position = UDim2.new(1, -35, 0, 8),
-        Size = UDim2.new(0, 28, 0, 28),
-        Name = "CloseButton"
-    }, LoaderContainer)
-
-    Create("UICorner", {CornerRadius = UDim.new(0, 8)}, CloseButton)
-
-    local closeStroke = Create("UIStroke", {
-        Color = White,
-        Thickness = 1.5,
-        Transparency = 0.4
-    }, CloseButton)
-
-    local CloseButtonGlow = Create("Frame", {
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(1, 6, 1, 6),
-        BackgroundColor3 = White,
-        BackgroundTransparency = 0.9,
-        BorderSizePixel = 0,
-        ZIndex = CloseButton.ZIndex - 1
-    }, CloseButton)
-    Create("UICorner", {CornerRadius = UDim.new(0, 12)}, CloseButtonGlow)
-
-    local closeGlowTween = TweenService:Create(
-        CloseButtonGlow,
-        TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-        {BackgroundTransparency = 0.6, Size = UDim2.new(1, 10, 1, 10)}
-    )
-    closeGlowTween:Play()
-
-    CloseButton.MouseEnter:Connect(function()
-        TweenService:Create(CloseButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            BackgroundColor3 = White,
-            TextColor3 = DarkBlack,
-            Rotation = 90,
-            Size = UDim2.new(0, 32, 0, 32)
-        }):Play()
-    end)
-
-    CloseButton.MouseLeave:Connect(function()
-        TweenService:Create(CloseButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            BackgroundColor3 = Charcoal,
-            TextColor3 = White,
-            Rotation = 0,
-            Size = UDim2.new(0, 28, 0, 28)
-        }):Play()
-    end)
-
-    local TitleLabel = Create("TextLabel", {
-        Font = Enum.Font.GothamBold,
-        Text = "",
-        TextColor3 = White,
-        TextSize = 32,
-        TextStrokeColor3 = Silver,
-        TextStrokeTransparency = 0.3,
         BackgroundTransparency = 1,
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0, 35),
-        Size = UDim2.new(0, 300, 0, 40),
-        TextXAlignment = Enum.TextXAlignment.Center,
-        Name = "TitleLabel"
-    }, LoaderContainer)
-
-    local TitleGradient = Create("UIGradient", {
-        Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 255, 255)),
-            ColorSequenceKeypoint.new(0.35, Color3.fromRGB(220, 220, 220)),
-            ColorSequenceKeypoint.new(0.7, Color3.fromRGB(150, 150, 150)),
-            ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 255, 255))
-        },
-        Rotation = 45
-    }, TitleLabel)
-
-    local TitleShadow = Create("TextLabel", {
-        Font = Enum.Font.GothamBold,
-        Text = "",
-        TextColor3 = DarkBlack,
-        TextSize = 32,
-        TextTransparency = 0.6,
-        BackgroundTransparency = 1,
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 2, 0, 37),
-        Size = UDim2.new(0, 300, 0, 40),
-        TextXAlignment = Enum.TextXAlignment.Center,
-        ZIndex = TitleLabel.ZIndex - 1,
-        Name = "TitleShadow"
-    }, LoaderContainer)
-
-    for i = 1, 3 do
-        local TitleGlow = Create("Frame", {
-            BackgroundColor3 = i == 1 and White or (i == 2 and Silver or Gray),
-            BackgroundTransparency = 0.88 + (i * 0.02),
-            BorderSizePixel = 0,
-            AnchorPoint = Vector2.new(0.5, 0.5),
-            Position = UDim2.new(0.5, 0, 0, 35),
-            Size = UDim2.new(0, 180 + (i * 20), 0, 35 + (i * 5)),
-            ZIndex = TitleLabel.ZIndex - (i + 1),
-            Name = "TitleGlow" .. i
-        }, LoaderContainer)
-
-        Create("UICorner", {CornerRadius = UDim.new(0, 15 + i)}, TitleGlow)
-
-        local titleGlowTween = TweenService:Create(
-            TitleGlow,
-            TweenInfo.new(1.5 + i, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-            {
-                BackgroundTransparency = 0.72 + (i * 0.05),
-                Size = UDim2.new(0, 200 + (i * 25), 0, 40 + (i * 8))
-            }
-        )
-        titleGlowTween:Play()
-    end
-
-    local gradientTween = TweenService:Create(
-        TitleGradient,
-        TweenInfo.new(6, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, false),
-        {Rotation = 405}
-    )
-    gradientTween:Play()
-
-    local function animateTitle()
-        local cursorChar = "|"
-        local blinkCursor = true
-
-        local function blinkCursorAnimation()
-            while LoaderGui.Parent and blinkCursor do
-                TitleLabel.Text = TitleLabel.Text:gsub("|", "") .. cursorChar
-                TitleShadow.Text = TitleLabel.Text
-                wait(0.5)
-                if blinkCursor then
-                    TitleLabel.Text = TitleLabel.Text:gsub("|", "")
-                    TitleShadow.Text = TitleLabel.Text
-                    wait(0.5)
-                end
-            end
-        end
-
-        while LoaderGui.Parent do
-            blinkCursor = false
-
-            for i = 1, #Title do
-                if not LoaderGui.Parent then break end
-
-                local currentText = string.sub(Title, 1, i)
-                TitleLabel.Text = currentText
-                TitleShadow.Text = currentText
-
-                TitleLabel.TextSize = 40
-                TitleShadow.TextSize = 40
-                TweenService:Create(TitleLabel, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 32}):Play()
-                TweenService:Create(TitleShadow, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 32}):Play()
-
-                local flashColors = {
-                    Color3.fromRGB(255, 255, 255),
-                    Color3.fromRGB(220, 220, 220),
-                    Color3.fromRGB(160, 160, 160)
-                }
-                local originalColor = TitleLabel.TextStrokeColor3
-                TitleLabel.TextStrokeColor3 = flashColors[math.random(1, 3)]
-                TweenService:Create(TitleLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextStrokeColor3 = originalColor}):Play()
-
-                TweenService:Create(BorderStroke, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Color = White, Transparency = 0.05}):Play()
-                TweenService:Create(BorderStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Color = Silver, Transparency = 0.15}):Play()
-
-                wait(0.1)
-            end
-
-            blinkCursor = true
-            spawn(blinkCursorAnimation)
-            wait(3)
-            blinkCursor = false
-
-            for i = #Title, 0, -1 do
-                if not LoaderGui.Parent then break end
-
-                local currentText = string.sub(Title, 1, i)
-                TitleLabel.Text = currentText
-                TitleShadow.Text = currentText
-
-                TitleLabel.TextSize = 34
-                TitleShadow.TextSize = 34
-                TweenService:Create(TitleLabel, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextSize = 32}):Play()
-                TweenService:Create(TitleShadow, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextSize = 32}):Play()
-
-                TweenService:Create(TitleLabel, TweenInfo.new(0.04, Enum.EasingStyle.Quad), {TextTransparency = 0.5}):Play()
-                TweenService:Create(TitleLabel, TweenInfo.new(0.04, Enum.EasingStyle.Quad), {TextTransparency = 0}):Play()
-
-                wait(0.05)
-            end
-
-            wait(1)
-        end
-    end
-
-    spawn(animateTitle)
-
-    spawn(function()
-        while LoaderGui.Parent do
-            wait(2)
-            if not LoaderGui.Parent then break end
-            local origPos = TitleLabel.Position
-            TweenService:Create(TitleLabel, TweenInfo.new(0.15, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
-                Position = origPos + UDim2.new(0, math.random(-3, 3), 0, math.random(-3, 3))
-            }):Play()
-            TweenService:Create(TitleShadow, TweenInfo.new(0.15, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
-                Position = origPos + UDim2.new(0, 2 + math.random(-3, 3), 0, 2 + math.random(-3, 3))
-            }):Play()
-            wait(0.15)
-            TweenService:Create(TitleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
-                Position = origPos
-            }):Play()
-            TweenService:Create(TitleShadow, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
-                Position = origPos + UDim2.new(0, 2, 0, 2)
-            }):Play()
-        end
-    end)
-
-    for i = 1, 25 do
-        local sparkleType = i <= 10 and 1 or (i <= 18 and 2 or 3)
-        local sparkleSize = sparkleType == 1 and 2 or (sparkleType == 2 and 3 or 1)
-        local sparkleColor = sparkleType == 1 and White or 
-                            (sparkleType == 2 and Silver or Gray)
-
-        local sparkle = Create("Frame", {
-            BackgroundColor3 = sparkleColor,
-            BackgroundTransparency = 0.6,
-            BorderSizePixel = 0,
-            Size = UDim2.new(0, sparkleSize, 0, sparkleSize),
-            AnchorPoint = Vector2.new(0.5, 0.5),
-            Position = UDim2.new(0.5, math.random(-120, 120), 0, 35 + math.random(-30, 30)),
-            ZIndex = TitleLabel.ZIndex + 1,
-            Name = "Sparkle" .. i
-        }, LoaderContainer)
-
-        if sparkleType == 3 then
-            Create("UICorner", {CornerRadius = UDim.new(0, 1)}, sparkle)
-        else
-            Create("UICorner", {CornerRadius = UDim.new(1, 0)}, sparkle)
-        end
-
-        local sparkleSpeed = math.random(10, 40) / 10
-        local sparkleTween = TweenService:Create(
-            sparkle,
-            TweenInfo.new(sparkleSpeed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-            {
-                BackgroundTransparency = 0.2,
-                Size = UDim2.new(0, sparkleSize + 2, 0, sparkleSize + 2),
-                Position = UDim2.new(0.5, math.random(-140, 140), 0, 35 + math.random(-35, 35)),
-                Rotation = math.random(-360, 360)
-            }
-        )
-        sparkleTween:Play()
-    end
-
-    local scanLine = Create("Frame", {
-        BackgroundColor3 = White,
-        BackgroundTransparency = 0.85,
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, -20, 0, 2),
-        Position = UDim2.new(0, 10, 0, 0),
-        ZIndex = TitleLabel.ZIndex + 2,
-        Name = "ScanLine"
-    }, LoaderContainer)
-
-    Create("UICorner", {CornerRadius = UDim.new(1, 0)}, scanLine)
-
-    spawn(function()
-        while LoaderGui.Parent do
-            scanLine.Position = UDim2.new(0, 10, 0, 0)
-            scanLine.BackgroundTransparency = 0.85
-            TweenService:Create(scanLine, TweenInfo.new(2.5, Enum.EasingStyle.Linear), {
-                Position = UDim2.new(0, 10, 1, -2),
-                BackgroundTransparency = 0.6
-            }):Play()
-            wait(2.5)
-        end
-    end)
-
-    local ButtonsFrame = Create("Frame", {
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 20, 0, 90),
-        Size = UDim2.new(1, -40, 0, 120),
-        Name = "ButtonsFrame"
-    }, LoaderContainer)
-
-    local function createEnhancedButton(properties, parent)
-        local button = Create("TextButton", properties, parent)
-        Create("UICorner", {CornerRadius = UDim.new(0, 10)}, button)
-
-        local buttonStroke = Create("UIStroke", {
-            Color = White,
-            Thickness = 1.5,
-            Transparency = 0.4
-        }, button)
-
-        local buttonGlow = Create("Frame", {
-            AnchorPoint = Vector2.new(0.5, 0.5),
-            Position = UDim2.new(0.5, 0, 0.5, 0),
-            Size = UDim2.new(1, 4, 1, 4),
-            BackgroundColor3 = properties.BackgroundColor3,
-            BackgroundTransparency = 0.9,
-            BorderSizePixel = 0,
-            ZIndex = button.ZIndex - 1
-        }, button)
-        Create("UICorner", {CornerRadius = UDim.new(0, 12)}, buttonGlow)
-
-        spawn(function()
-            while LoaderGui.Parent and button.Parent do
-                TweenService:Create(buttonStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                    Color = Silver, Transparency = 0.7
-                }):Play()
-                wait(1.5)
-                if not (LoaderGui.Parent and button.Parent) then break end
-                TweenService:Create(buttonStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                    Color = White, Transparency = 0.3
-                }):Play()
-                wait(1.5)
-            end
-        end)
-
-        return button, buttonGlow, buttonStroke
-    end
-
-    local MainScriptButton, MainScriptGlow = createEnhancedButton({
-        Font = Enum.Font.FredokaOne,
-        Text = "MAIN",
-        TextColor3 = White,
-        TextSize = 16,
-        BackgroundColor3 = Gray,
-        BackgroundTransparency = 0,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 0, 0, 0),
-        Size = UDim2.new(1, 0, 0, 50),
-        Name = "MainScriptButton"
-    }, ButtonsFrame)
-
-    local BossFarmingButton, BossFarmingGlow = createEnhancedButton({
-        Font = Enum.Font.FredokaOne,
-        Text = "BOSS FARMING",
-        TextColor3 = White,
-        TextSize = 16,
-        BackgroundColor3 = Charcoal,
-        BackgroundTransparency = 0,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 0, 0, 60),
-        Size = UDim2.new(1, 0, 0, 50),
-        Name = "BossFarmingButton"
-    }, ButtonsFrame)
-
-    local function addEnhancedHoverEffect(button, buttonGlow, hoverColor, originalColor)
-        button.MouseEnter:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                BackgroundColor3 = hoverColor,
-                TextColor3 = DarkBlack,
-                Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset + 6, button.Size.Y.Scale, button.Size.Y.Offset + 3),
-                TextSize = button.TextSize + 1,
-                Rotation = math.random(-2, 2)
-            }):Play()
-            TweenService:Create(buttonGlow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundTransparency = 0.7,
-                Size = UDim2.new(1, 8, 1, 8)
-            }):Play()
-        end)
-
-        button.MouseLeave:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = originalColor,
-                TextColor3 = White,
-                Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset - 6, button.Size.Y.Scale, button.Size.Y.Offset - 3),
-                TextSize = button.TextSize - 1,
-                Rotation = 0
-            }):Play()
-            TweenService:Create(buttonGlow, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundTransparency = 0.9,
-                Size = UDim2.new(1, 4, 1, 4)
-            }):Play()
-        end)
-
-        button.MouseButton1Down:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.08, Enum.EasingStyle.Quad), {
-                Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset - 8, button.Size.Y.Scale, button.Size.Y.Offset - 6)
-            }):Play()
-        end)
-
-        button.MouseButton1Up:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset + 2, button.Size.Y.Scale, button.Size.Y.Offset)
-            }):Play()
-        end)
-    end
-
-    addEnhancedHoverEffect(MainScriptButton, MainScriptGlow, White, Gray)
-    addEnhancedHoverEffect(BossFarmingButton, BossFarmingGlow, White, Charcoal)
-
-    MainScriptButton.Activated:Connect(function()
-        script = Instance.new("LocalScript")
-        script.Name = "KODRuntime"
-        LoaderGui:Destroy()
-        loadstring(game:HttpGet(MainScriptURL))()
-    end)
-
-    BossFarmingButton.Activated:Connect(function()
-        script = Instance.new("LocalScript")
-        script.Name = "KODRuntime"
-        LoaderGui:Destroy()
-        loadstring(game:HttpGet(BossFarmingURL))()
-    end)
-
-    CloseButton.Activated:Connect(function()
-        TweenService:Create(LoaderContainer, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0),
-            BackgroundTransparency = 1,
-            Rotation = 180
-        }):Play()
-        TweenService:Create(BlurBackground, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
-        wait(0.6)
-        LoaderGui:Destroy()
-    end)
-
-    LoaderContainer.Size = UDim2.new(0, 0, 0, 0)
-    LoaderContainer.BackgroundTransparency = 1
-    LoaderContainer.Rotation = -180
-
-    TweenService:Create(LoaderContainer, TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 340, 0, 220),
-        BackgroundTransparency = 0,
-        Rotation = 0
-    }):Play()
-
-    local elements = {TitleLabel, ButtonsFrame}
-    for i, element in pairs(elements) do
-        element.Position = element.Position + UDim2.new(0, 0, 0, 50)
-        element.Rotation = math.random(-45, 45)
-
-        TweenService:Create(element, TweenInfo.new(0.8 + (i * 0.1), Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = element.Position - UDim2.new(0, 0, 0, 50),
-            Rotation = 0
-        }):Play()
-    end
-
-    return LoaderGui
+        Image = image,
+        ImageColor3 = color,
+    }, holder)
+    return holder
 end
 
-LoaderSystem:CreateLoader({})
+local function glowDecor(parent, w, h, x, y, transparency, rotation)
+    local img = make("ImageLabel", {
+        Size = UDim2.new(0, w, 0, h),
+        Position = UDim2.new(0, x, 0, y),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundTransparency = 1,
+        Image = IMG.GLOW,
+        ImageColor3 = C.glowA,
+        ImageTransparency = transparency,
+        ScaleType = Enum.ScaleType.Stretch,
+    }, parent)
+    make("UIGradient", {
+        Rotation = rotation,
+        Color = ColorSequence.new(C.glowA, C.glowB),
+    }, img)
+    return img
+end
 
-return LoaderSystem
+local function prep(container)
+    local items = {}
+    local function add(inst)
+        if inst:IsA("GuiObject") then
+            items[#items + 1] = { inst, "BackgroundTransparency", inst.BackgroundTransparency }
+            if inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox") then
+                items[#items + 1] = { inst, "TextTransparency", inst.TextTransparency }
+            elseif inst:IsA("ImageLabel") or inst:IsA("ImageButton") then
+                items[#items + 1] = { inst, "ImageTransparency", inst.ImageTransparency }
+            end
+        elseif inst:IsA("UIStroke") then
+            items[#items + 1] = { inst, "Transparency", inst.Transparency }
+        end
+    end
+    add(container)
+    for _, d in ipairs(container:GetDescendants()) do add(d) end
+    return items
+end
+
+local function fade(items, alpha, time)
+    for _, it in ipairs(items) do
+        local inst, prop, orig = it[1], it[2], it[3]
+        local target = 1 - (1 - orig) * alpha
+        if time and time > 0 then
+            tween(inst, time, { [prop] = target })
+        else
+            inst[prop] = target
+        end
+    end
+end
+
+local gui = make("ScreenGui", {
+    Name = "KOD_HUB",
+    IgnoreGuiInset = true,
+    ResetOnSpawn = false,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+    DisplayOrder = 999,
+}, RunService:IsStudio() and Player.PlayerGui or (gethui and gethui() or game:GetService("CoreGui")))
+
+local main = make("Frame", {
+    Name = "Window",
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.new(0, INTRO_SIZE, 0, INTRO_SIZE),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+}, gui)
+
+local shadow = make("ImageLabel", {
+    Size = UDim2.new(1, 60, 1, 60),
+    Position = UDim2.new(0, -30, 0, -30),
+    BackgroundTransparency = 1,
+    Image = IMG.SHADOW,
+    ImageColor3 = Color3.fromRGB(0, 0, 0),
+    ImageTransparency = 1,
+    ScaleType = Enum.ScaleType.Slice,
+    SliceCenter = Rect.new(49, 49, 450, 450),
+}, main)
+
+local canvas = make("Frame", {
+    Name = "Canvas",
+    Size = UDim2.new(1, 0, 1, 0),
+    BackgroundColor3 = C.bg,
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    ClipsDescendants = true,
+}, main)
+local canvasCorner = make("UICorner", { CornerRadius = UDim.new(0, 12) }, canvas)
+
+local borderStroke = make("UIStroke", {
+    Thickness = 1,
+    ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+    Color = C.stroke,
+    Transparency = 1,
+}, canvas)
+
+local decorGroup = make("CanvasGroup", {
+    Name = "Decor",
+    Size = UDim2.new(1, 0, 1, 0),
+    BackgroundTransparency = 1,
+    GroupTransparency = 1,
+}, canvas)
+make("UICorner", { CornerRadius = UDim.new(0, 12) }, decorGroup)
+
+local decorBg = make("Frame", {
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.new(0, FINAL_W, 0, FINAL_H),
+    BackgroundTransparency = 1,
+}, decorGroup)
+
+glowDecor(decorBg, 400, 150, 240, 270, 0.84, 270)
+glowDecor(decorBg, 120, 50, -10, 250, 0.78, 90)
+glowDecor(decorBg, 420, 200, 470, 10, 0.9, 90)
+glowDecor(decorBg, 80, 140, 5, -5, 0.8, 90)
+
+local intro = make("Frame", {
+    Name = "Intro",
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.new(0, FINAL_W, 0, FINAL_H),
+    BackgroundTransparency = 1,
+}, canvas)
+
+local introLogo = make("ImageLabel", {
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.new(0, 62, 0, 62),
+    BackgroundTransparency = 1,
+    Image = IMG.LOGO,
+    ImageColor3 = C.accent,
+    ImageTransparency = 1,
+    ScaleType = Enum.ScaleType.Fit,
+}, intro)
+
+local spinnerHolder = make("Frame", {
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0.5, 0, 0.5, 38),
+    Size = UDim2.new(0, 36, 0, 36),
+    BackgroundTransparency = 1,
+}, intro)
+
+local ringTrack = make("Frame", {
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.new(0, 24, 0, 24),
+    BackgroundTransparency = 1,
+}, spinnerHolder)
+make("UICorner", { CornerRadius = UDim.new(1, 0) }, ringTrack)
+make("UIStroke", { Thickness = 2.5, Color = C.muted, Transparency = 0.75 }, ringTrack)
+
+local spinner = make("Frame", {
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.new(0, 24, 0, 24),
+    BackgroundTransparency = 1,
+}, spinnerHolder)
+make("UICorner", { CornerRadius = UDim.new(1, 0) }, spinner)
+local spinnerStroke = make("UIStroke", { Thickness = 2.5, Color = C.accent }, spinner)
+make("UIGradient", {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(0.35, 0),
+        NumberSequenceKeypoint.new(0.7, 1),
+        NumberSequenceKeypoint.new(1, 1),
+    }),
+}, spinnerStroke)
+
+local spin = TweenService:Create(
+    spinner,
+    TweenInfo.new(0.9, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1),
+    { Rotation = 360 }
+)
+
+local spinnerItems = prep(spinnerHolder)
+fade(spinnerItems, 0)
+
+local content = make("Frame", {
+    Name = "Content",
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.new(0, FINAL_W, 0, FINAL_H),
+    BackgroundTransparency = 1,
+    Visible = false,
+}, canvas)
+
+local left = frame(content, 0, 0, 272, FINAL_H)
+
+make("ImageLabel", {
+    Position = UDim2.new(0, 22, 0, 20),
+    Size = UDim2.new(0, 36, 0, 32),
+    BackgroundTransparency = 1,
+    Image = IMG.LOGO,
+    ImageColor3 = C.accent,
+    ScaleType = Enum.ScaleType.Fit,
+}, left)
+
+local hubTitle = text(left, HUB_TITLE, 66, 18, 190, 24, 21, C.text, nil, true)
+local hubSub   = text(left, HUB_SUB,   66, 42, 190, 14, 12, C.muted)
+
+text(left, "Script", 22, 78, 228, 14, 11, C.muted)
+
+local function makeScriptButton(y, label, image, isPrimary)
+    local btn = make("TextButton", {
+        Position = UDim2.new(0, 22, 0, y),
+        Size = UDim2.new(0, 228, 0, 46),
+        BackgroundColor3 = isPrimary and C.btn or C.card,
+        BorderSizePixel = 0,
+        AutoButtonColor = false,
+        Text = "",
+    }, left)
+    round(btn, 9, C.stroke)
+
+    local ic = icon(btn, 14, 15, isPrimary and C.accent or C.muted, image, 16)
+
+    local titleLbl = text(btn, label, 40, 8, 178, 16, 13, C.text, nil, true)
+    local subLbl   = text(btn, "Tap to load", 40, 24, 178, 14, 11, C.muted)
+
+    local function setHover(on)
+        tween(btn, 0.2, { BackgroundColor3 = on and C.btnHov or (isPrimary and C.btn or C.card) })
+        tween(titleLbl, 0.2, { TextColor3 = on and C.accent or C.text })
+    end
+
+    btn.MouseEnter:Connect(function() setHover(true) end)
+    btn.MouseLeave:Connect(function() setHover(false) end)
+
+    btn.MouseButton1Down:Connect(function()
+        tween(btn, 0.1, { Size = UDim2.new(0, 220, 0, 42), Position = UDim2.new(0, 26, 0, y + 2) })
+    end)
+    btn.MouseButton1Up:Connect(function()
+        tween(btn, 0.15, { Size = UDim2.new(0, 228, 0, 46), Position = UDim2.new(0, 22, 0, y) }, Enum.EasingStyle.Back)
+    end)
+
+    return btn
+end
+
+local mainBtn = makeScriptButton(96,  "MAIN",         IMG.SUBMIT, true)
+local bossBtn = makeScriptButton(148, "BOSS FARMING", IMG.KEY,    false)
+
+local avatar = make("ImageLabel", {
+    Position = UDim2.new(0, 22, 0, 210),
+    Size = UDim2.new(0, 34, 0, 34),
+    BackgroundColor3 = C.input,
+    BorderSizePixel = 0,
+    Image = Player and ("rbxthumb://type=AvatarHeadShot&id=" .. Player.UserId .. "&w=150&h=150") or "",
+    ScaleType = Enum.ScaleType.Crop,
+}, left)
+round(avatar, 17, C.stroke)
+
+text(left, "Welcome back,", 66, 210, 184, 14, 11, C.muted)
+local welcomeName = text(left, ((Player and Player.DisplayName) or "User") .. "!", 66, 224, 184, 18, 14, C.text, nil, true)
+welcomeName.TextTruncate = Enum.TextTruncate.AtEnd
+
+frame(content, 272, 20, 1, FINAL_H - 40, C.stroke, 0)
+
+local right = frame(content, 273, 0, 207, FINAL_H)
+
+text(right, "Detected game", 20, 24, 167, 14, 11, C.muted)
+
+local gameCard = frame(right, 20, 42, 167, 54, C.card, 0)
+round(gameCard, 9, C.stroke)
+
+local gameImg = make("ImageLabel", {
+    Position = UDim2.new(0, 10, 0, 10),
+    Size = UDim2.new(0, 34, 0, 34),
+    BackgroundColor3 = C.input,
+    BorderSizePixel = 0,
+    Image = IMG.GAME,
+    ScaleType = Enum.ScaleType.Stretch,
+}, gameCard)
+round(gameImg, 7, C.stroke)
+
+local gameName = text(gameCard, "Loading...", 54, 10, 104, 15, 12, C.text, nil, true)
+gameName.TextTruncate = Enum.TextTruncate.AtEnd
+local gameStatus = text(gameCard, "Checking...", 54, 27, 104, 14, 11, C.muted)
+
+text(right, "Executor", 20, 112, 80, 14, 11, C.muted)
+local executorLbl = text(right, "Detecting...", 96, 112, 91, 14, 11, C.text, Enum.TextXAlignment.Right)
+executorLbl.TextTruncate = Enum.TextTruncate.AtEnd
+
+text(right, "Status", 20, 132, 80, 14, 11, C.muted)
+local statusLbl = text(right, "Ready", 96, 132, 91, 14, 11, C.success, Enum.TextXAlignment.Right)
+
+frame(right, 20, 156, 167, 1, C.stroke, 0)
+
+local function featureRow(y, label)
+    local row = frame(right, 20, y, 167, 22)
+    local dot = frame(row, 0, 8, 6, 6, C.accent, 0)
+    make("UICorner", { CornerRadius = UDim.new(1, 0) }, dot)
+    text(row, label, 14, 0, 150, 22, 11, C.muted)
+    return row
+end
+
+featureRow(164, "Auto farm boss")
+featureRow(184, "Auto sell / upgrade")
+
+local discordBtn = make("TextButton", {
+    Position = UDim2.new(0, 20, 0, 210),
+    Size = UDim2.new(0, 167, 0, 40),
+    BackgroundColor3 = C.card,
+    BorderSizePixel = 0,
+    AutoButtonColor = false,
+    Text = "",
+}, right)
+round(discordBtn, 9, C.stroke)
+
+icon(discordBtn, 12, 12, C.discord, IMG.DISCORD, 16)
+
+local discordTitle = text(discordBtn, "Join our Discord", 36, 6, 122, 15, 12, C.text, nil, true)
+local discordSub   = text(discordBtn, "discord.gg/hh79adY9f2", 36, 22, 122, 13, 10, C.muted)
+discordSub.TextTruncate = Enum.TextTruncate.AtEnd
+
+local closeBtn = make("TextButton", {
+    Name = "CloseButton",
+    AnchorPoint = Vector2.new(1, 0),
+    Position = UDim2.new(1, -12, 0, 12),
+    Size = UDim2.new(0, 26, 0, 26),
+    BackgroundColor3 = C.card,
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    AutoButtonColor = false,
+    Text = "",
+    ZIndex = 5,
+}, content)
+make("UICorner", { CornerRadius = UDim.new(0, 7) }, closeBtn)
+
+local closeIcon = make("ImageLabel", {
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.new(0, 12, 0, 12),
+    BackgroundTransparency = 1,
+    Image = IMG.CLOSE,
+    ImageColor3 = C.muted,
+    ZIndex = 6,
+}, closeBtn)
+
+local contentItems = prep(content)
+fade(contentItems, 0)
+
+local notifyHolder = make("Frame", {
+    AnchorPoint = Vector2.new(1, 1),
+    Position = UDim2.new(1, -16, 1, -16),
+    Size = UDim2.new(0, 300, 1, -32),
+    BackgroundTransparency = 1,
+    ZIndex = 20,
+}, gui)
+make("UIListLayout", {
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    VerticalAlignment = Enum.VerticalAlignment.Bottom,
+    HorizontalAlignment = Enum.HorizontalAlignment.Right,
+    Padding = UDim.new(0, 8),
+}, notifyHolder)
+
+local notifIndex = 0
+local function notify(title, message, kind, duration)
+    duration = duration or 3.5
+    kind = kind or "info"
+    local color = (kind == "success" and C.success) or (kind == "warn" and C.warn) or (kind == "error" and C.error) or C.accent
+
+    notifIndex += 1
+    local wrapper = make("Frame", {
+        LayoutOrder = notifIndex,
+        Size = UDim2.new(0, 300, 0, 0),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        ClipsDescendants = true,
+    }, notifyHolder)
+
+    local toast = make("TextButton", {
+        Position = UDim2.new(0, 40, 0, 0),
+        Size = UDim2.new(1, 0, 0, 60),
+        BackgroundColor3 = C.card,
+        BackgroundTransparency = 0.1,
+        BorderSizePixel = 0,
+        AutoButtonColor = false,
+        Text = "",
+    }, wrapper)
+    round(toast, 10, C.stroke)
+
+    local bar = frame(toast, 8, 10, 3, 40, color, 0)
+    round(bar, 2)
+
+    local t = text(toast, title, 22, 11, 260, 16, 13, C.text, nil, true)
+    t.TextTruncate = Enum.TextTruncate.AtEnd
+    local m = text(toast, message, 22, 29, 260, 15, 11, C.muted)
+    m.TextTruncate = Enum.TextTruncate.AtEnd
+
+    local trackW = 240
+    local track = frame(toast, 22, 50, trackW, 2, C.stroke, 0.4)
+    round(track, 1)
+    local fill = frame(track, 0, 0, trackW, 2, color, 0)
+    round(fill, 1)
+
+    local items = prep(toast)
+    fade(items, 0)
+    tween(wrapper, 0.3, { Size = UDim2.new(0, 300, 0, 60) }, Enum.EasingStyle.Quint)
+    tween(toast, 0.4, { Position = UDim2.new(0, 0, 0, 0) }, Enum.EasingStyle.Quint)
+    fade(items, 1, 0.3)
+
+    local elapsed = 0
+    local conn
+    conn = RunService.Heartbeat:Connect(function(dt)
+        elapsed += dt
+        local frac = math.clamp(1 - elapsed / duration, 0, 1)
+        fill.Size = UDim2.new(frac, 0, 0, 2)
+        if elapsed >= duration then
+            conn:Disconnect()
+        end
+    end)
+
+    task.delay(duration, function()
+        tween(toast, 0.3, { Position = UDim2.new(0, 40, 0, 0) }, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+        fade(items, 0, 0.3)
+        tween(wrapper, 0.3, { Size = UDim2.new(0, 300, 0, 0) }, Enum.EasingStyle.Quint)
+        task.wait(0.35)
+        wrapper:Destroy()
+    end)
+end
+
+local function detectExecutor()
+    local ok, name = pcall(function()
+        if identifyexecutor then return identifyexecutor() end
+        if getexecutorname then return getexecutorname() end
+    end)
+    if ok and name and tostring(name) ~= "" then return tostring(name) end
+    return "Unknown"
+end
+executorLbl.Text = detectExecutor()
+
+task.spawn(function()
+    local ok, info = pcall(function()
+        return MarketplaceService:GetProductInfo(game.PlaceId)
+    end)
+    gameName.Text = (ok and type(info) == "table" and info.Name) or "Unknown game"
+    if game.GameId ~= 0 then
+        gameImg.Image = "rbxthumb://type=GameIcon&id=" .. game.GameId .. "&w=150&h=150"
+    end
+    gameStatus.Text = "Detected"
+    gameStatus.TextColor3 = C.success
+end)
+
+local state = { ready = false, closing = false }
+
+local function runScript(url, label)
+    if state.closing then return end
+    state.ready = false
+
+    statusLbl.Text = "Loading..."
+    statusLbl.TextColor3 = C.warn
+
+    notify("Loading " .. label, "Please wait...", "info", 2)
+
+    fade(contentItems, 0, 0.25)
+    task.wait(0.25)
+    content.Visible = false
+    spinnerHolder.Position = UDim2.new(0.5, 0, 0.5, 0)
+    spin:Play()
+    fade(spinnerItems, 1, 0.3)
+    task.wait(0.3)
+
+    local ok, result = pcall(function()
+        return game:HttpGet(url)
+    end)
+
+    fade(spinnerItems, 0, 0.25)
+    task.wait(0.25)
+    spin:Cancel()
+
+    if not ok or not result or #result == 0 then
+        statusLbl.Text = "Failed"
+        statusLbl.TextColor3 = C.error
+        notify("Couldn't load", "Check your connection or the script URL.", "error", 5)
+        content.Visible = true
+        fade(contentItems, 1, 0.35)
+        state.ready = true
+        return
+    end
+
+    statusLbl.Text = "Running"
+    statusLbl.TextColor3 = C.success
+    notify(label .. " loaded", "Executing now.", "success", 2.5)
+
+    task.wait(0.6)
+
+    gui:Destroy()
+
+    local fn, compileErr = loadstring(result)
+    if not fn then
+        warn("KOD HUB compile error: " .. tostring(compileErr))
+        return
+    end
+    pcall(fn)
+end
+
+mainBtn.MouseButton1Click:Connect(function()
+    if state.ready then runScript(MAIN_URL, "MAIN") end
+end)
+bossBtn.MouseButton1Click:Connect(function()
+    if state.ready then runScript(BOSS_URL, "BOSS FARMING") end
+end)
+
+discordBtn.MouseEnter:Connect(function()
+    tween(discordBtn, 0.2, { BackgroundColor3 = C.btnHov })
+    tween(discordTitle, 0.2, { TextColor3 = C.discord })
+end)
+discordBtn.MouseLeave:Connect(function()
+    tween(discordBtn, 0.2, { BackgroundColor3 = C.card })
+    tween(discordTitle, 0.2, { TextColor3 = C.text })
+end)
+discordBtn.MouseButton1Click:Connect(function()
+    local fn = setclipboard or toclipboard
+    if fn then
+        pcall(fn, DISCORD_URL)
+        notify("Discord copied", "The invite link is in your clipboard.", "success", 3)
+    else
+        notify("Discord invite", DISCORD_URL, "info", 5)
+    end
+end)
+
+closeBtn.MouseEnter:Connect(function()
+    tween(closeBtn, 0.15, { BackgroundTransparency = 0 })
+    closeIcon.ImageColor3 = C.text
+end)
+closeBtn.MouseLeave:Connect(function()
+    tween(closeBtn, 0.15, { BackgroundTransparency = 1 })
+    closeIcon.ImageColor3 = C.muted
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    if state.closing then return end
+    state.closing = true
+    state.ready = false
+
+    tween(canvas, 0.3, { BackgroundTransparency = 1 })
+    fade(contentItems, 0, 0.3)
+    tween(decorGroup, 0.3, { GroupTransparency = 1 })
+    tween(borderStroke, 0.3, { Transparency = 1 })
+    tween(shadow, 0.3, { ImageTransparency = 1 })
+    task.wait(0.35)
+    gui:Destroy()
+end)
+
+local function snap()
+    local size = gui.AbsoluteSize
+    main.Position = UDim2.new(0, math.floor(size.X / 2), 0, math.floor(size.Y / 2))
+end
+snap()
+gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(snap)
+
+task.spawn(function()
+    main.Size = UDim2.new(0, INTRO_SIZE - 20, 0, INTRO_SIZE - 20)
+    tween(main, 0.6, { Size = UDim2.new(0, INTRO_SIZE, 0, INTRO_SIZE) }, Enum.EasingStyle.Quint)
+    tween(canvas, 0.5, { BackgroundTransparency = 0 })
+    tween(decorGroup, 0.5, { GroupTransparency = 0 })
+    tween(introLogo, 0.5, { ImageTransparency = 0 })
+    tween(borderStroke, 0.5, { Transparency = 0.55 })
+    tween(shadow, 0.5, { ImageTransparency = 0.6 })
+
+    task.wait(INTRO_TIME * 0.55)
+
+    tween(borderStroke, 0.7, { Transparency = 1 })
+    tween(main, 0.85, { Size = UDim2.new(0, FINAL_W, 0, FINAL_H) }, Enum.EasingStyle.Quint)
+    tween(introLogo, 0.7, { Position = UDim2.new(0.5, 0, 0.5, -30) }, Enum.EasingStyle.Quint)
+
+    task.wait(0.4)
+    spin:Play()
+    fade(spinnerItems, 1, 0.4)
+
+    task.wait(INTRO_TIME * 0.45)
+
+    fade(spinnerItems, 0, 0.3)
+    tween(introLogo, 0.3, { ImageTransparency = 1 })
+    task.wait(0.25)
+    spin:Cancel()
+
+    content.Visible = true
+    fade(contentItems, 1, 0.45)
+    task.wait(0.35)
+
+    state.ready = true
+end)
+
+task.spawn(function()
+    task.wait(0.6)
+    notify(HUB_TITLE, "Welcome! Choose a script to begin.", "info", 4)
+end)
