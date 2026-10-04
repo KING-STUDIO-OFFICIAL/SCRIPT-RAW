@@ -22,13 +22,14 @@ function LoaderSystem:CreateLoader(Config)
     local BossFarmingURL = Config.BossFarmingURL or "https://raw.githubusercontent.com/KING-STUDIO-OFFICIAL/SCRIPT-RAW/refs/heads/main/BOSS-ML-.lua"
     local MainScriptURL = Config.MainScriptURL or "https://raw.githubusercontent.com/KING-STUDIO-OFFICIAL/SCRIPT-RAW/refs/heads/main/Main-ml.lua"
 
-    local Black       = Color3.fromRGB(10, 10, 10)
+    local Black       = Color3.fromRGB(8, 8, 8)
     local DarkBlack   = Color3.fromRGB(0, 0, 0)
-    local Red         = Color3.fromRGB(220, 20, 20)
-    local DarkRed     = Color3.fromRGB(140, 10, 10)
-    local Orange      = Color3.fromRGB(255, 120, 0)
-    local DeepOrange  = Color3.fromRGB(200, 80, 0)
-    local NeonOrange  = Color3.fromRGB(255, 170, 40)
+    local Panel       = Color3.fromRGB(18, 18, 18)
+    local Charcoal    = Color3.fromRGB(35, 35, 35)
+    local Gray        = Color3.fromRGB(90, 90, 90)
+    local LightGray   = Color3.fromRGB(160, 160, 160)
+    local Silver      = Color3.fromRGB(200, 200, 200)
+    local White       = Color3.fromRGB(255, 255, 255)
 
     local LoaderGui = Create("ScreenGui", {
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
@@ -39,7 +40,7 @@ function LoaderSystem:CreateLoader(Config)
 
     local BlurBackground = Create("Frame", {
         BackgroundColor3 = DarkBlack,
-        BackgroundTransparency = 0.35,
+        BackgroundTransparency = 0.25,
         BorderSizePixel = 0,
         Size = UDim2.new(1, 0, 1, 0),
         Position = UDim2.new(0, 0, 0, 0),
@@ -48,9 +49,9 @@ function LoaderSystem:CreateLoader(Config)
 
     local BackgroundGradient = Create("UIGradient", {
         Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0.0, Color3.fromRGB(30, 0, 0)),
-            ColorSequenceKeypoint.new(0.3, Color3.fromRGB(15, 0, 0)),
-            ColorSequenceKeypoint.new(0.7, Color3.fromRGB(40, 10, 0)),
+            ColorSequenceKeypoint.new(0.0, Color3.fromRGB(40, 40, 40)),
+            ColorSequenceKeypoint.new(0.3, Color3.fromRGB(15, 15, 15)),
+            ColorSequenceKeypoint.new(0.7, Color3.fromRGB(25, 25, 25)),
             ColorSequenceKeypoint.new(1.0, Color3.fromRGB(0, 0, 0))
         },
         Rotation = 45
@@ -66,8 +67,8 @@ function LoaderSystem:CreateLoader(Config)
     for i = 1, 30 do
         local particleSize = math.random(1, 7)
         local particle = Create("Frame", {
-            BackgroundColor3 = i <= 15 and Red or (i <= 22 and NeonOrange or Orange),
-            BackgroundTransparency = math.random(70, 90) / 100,
+            BackgroundColor3 = i <= 15 and White or (i <= 22 and Silver or Gray),
+            BackgroundTransparency = math.random(70, 92) / 100,
             BorderSizePixel = 0,
             Size = UDim2.new(0, particleSize, 0, particleSize),
             Position = UDim2.new(math.random(0, 100) / 100, 0, math.random(0, 100) / 100, 0),
@@ -111,7 +112,7 @@ function LoaderSystem:CreateLoader(Config)
 
     local LoaderContainer = Create("Frame", {
         AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = Black,
+        BackgroundColor3 = Panel,
         BackgroundTransparency = 0,
         BorderSizePixel = 0,
         Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -122,24 +123,24 @@ function LoaderSystem:CreateLoader(Config)
     Create("UICorner", {CornerRadius = UDim.new(0, 18)}, LoaderContainer)
 
     local BorderStroke = Create("UIStroke", {
-        Color = Red,
-        Thickness = 2.5,
-        Transparency = 0.2,
+        Color = White,
+        Thickness = 2,
+        Transparency = 0.15,
         ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     }, LoaderContainer)
 
     local BorderGradient = Create("UIGradient", {
         Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0.0, Red),
-            ColorSequenceKeypoint.new(0.5, NeonOrange),
-            ColorSequenceKeypoint.new(1.0, DeepOrange)
+            ColorSequenceKeypoint.new(0.0, White),
+            ColorSequenceKeypoint.new(0.5, LightGray),
+            ColorSequenceKeypoint.new(1.0, Gray)
         },
         Rotation = 0
     }, BorderStroke)
 
     local borderTween = TweenService:Create(
         BorderGradient,
-        TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, false),
+        TweenInfo.new(4, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, false),
         {Rotation = 360}
     )
     borderTween:Play()
@@ -150,8 +151,8 @@ function LoaderSystem:CreateLoader(Config)
             AnchorPoint = Vector2.new(0.5, 0.5),
             Position = UDim2.new(0.5, 0, 0.5, 0),
             Size = UDim2.new(1, glowSize, 1, glowSize),
-            BackgroundColor3 = i == 1 and Red or (i == 2 and NeonOrange or Orange),
-            BackgroundTransparency = 0.8 + (i * 0.05),
+            BackgroundColor3 = i == 1 and White or (i == 2 and Silver or Gray),
+            BackgroundTransparency = 0.82 + (i * 0.04),
             BorderSizePixel = 0,
             ZIndex = LoaderContainer.ZIndex - i
         }, BlurBackground)
@@ -172,9 +173,9 @@ function LoaderSystem:CreateLoader(Config)
     local CloseButton = Create("TextButton", {
         Font = Enum.Font.GothamBold,
         Text = "×",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextColor3 = White,
         TextSize = 22,
-        BackgroundColor3 = Red,
+        BackgroundColor3 = Charcoal,
         BackgroundTransparency = 0,
         AutoButtonColor = false,
         BorderSizePixel = 0,
@@ -185,11 +186,17 @@ function LoaderSystem:CreateLoader(Config)
 
     Create("UICorner", {CornerRadius = UDim.new(0, 8)}, CloseButton)
 
+    local closeStroke = Create("UIStroke", {
+        Color = White,
+        Thickness = 1.5,
+        Transparency = 0.4
+    }, CloseButton)
+
     local CloseButtonGlow = Create("Frame", {
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),
         Size = UDim2.new(1, 6, 1, 6),
-        BackgroundColor3 = Red,
+        BackgroundColor3 = White,
         BackgroundTransparency = 0.9,
         BorderSizePixel = 0,
         ZIndex = CloseButton.ZIndex - 1
@@ -205,7 +212,8 @@ function LoaderSystem:CreateLoader(Config)
 
     CloseButton.MouseEnter:Connect(function()
         TweenService:Create(CloseButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            BackgroundColor3 = NeonOrange,
+            BackgroundColor3 = White,
+            TextColor3 = DarkBlack,
             Rotation = 90,
             Size = UDim2.new(0, 32, 0, 32)
         }):Play()
@@ -213,7 +221,8 @@ function LoaderSystem:CreateLoader(Config)
 
     CloseButton.MouseLeave:Connect(function()
         TweenService:Create(CloseButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            BackgroundColor3 = Red,
+            BackgroundColor3 = Charcoal,
+            TextColor3 = White,
             Rotation = 0,
             Size = UDim2.new(0, 28, 0, 28)
         }):Play()
@@ -222,9 +231,9 @@ function LoaderSystem:CreateLoader(Config)
     local TitleLabel = Create("TextLabel", {
         Font = Enum.Font.GothamBold,
         Text = "",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextColor3 = White,
         TextSize = 32,
-        TextStrokeColor3 = Red,
+        TextStrokeColor3 = Silver,
         TextStrokeTransparency = 0.3,
         BackgroundTransparency = 1,
         AnchorPoint = Vector2.new(0.5, 0.5),
@@ -236,10 +245,10 @@ function LoaderSystem:CreateLoader(Config)
 
     local TitleGradient = Create("UIGradient", {
         Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 60, 0)),
-            ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255, 110, 0)),
-            ColorSequenceKeypoint.new(0.7, Color3.fromRGB(255, 150, 20)),
-            ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 200, 60))
+            ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 255, 255)),
+            ColorSequenceKeypoint.new(0.35, Color3.fromRGB(220, 220, 220)),
+            ColorSequenceKeypoint.new(0.7, Color3.fromRGB(150, 150, 150)),
+            ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 255, 255))
         },
         Rotation = 45
     }, TitleLabel)
@@ -247,9 +256,9 @@ function LoaderSystem:CreateLoader(Config)
     local TitleShadow = Create("TextLabel", {
         Font = Enum.Font.GothamBold,
         Text = "",
-        TextColor3 = Color3.fromRGB(0, 0, 0),
+        TextColor3 = DarkBlack,
         TextSize = 32,
-        TextTransparency = 0.7,
+        TextTransparency = 0.6,
         BackgroundTransparency = 1,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 2, 0, 37),
@@ -261,8 +270,8 @@ function LoaderSystem:CreateLoader(Config)
 
     for i = 1, 3 do
         local TitleGlow = Create("Frame", {
-            BackgroundColor3 = i == 1 and Red or (i == 2 and NeonOrange or Orange),
-            BackgroundTransparency = 0.85 + (i * 0.03),
+            BackgroundColor3 = i == 1 and White or (i == 2 and Silver or Gray),
+            BackgroundTransparency = 0.88 + (i * 0.02),
             BorderSizePixel = 0,
             AnchorPoint = Vector2.new(0.5, 0.5),
             Position = UDim2.new(0.5, 0, 0, 35),
@@ -277,7 +286,7 @@ function LoaderSystem:CreateLoader(Config)
             TitleGlow,
             TweenInfo.new(1.5 + i, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
             {
-                BackgroundTransparency = 0.7 + (i * 0.05),
+                BackgroundTransparency = 0.72 + (i * 0.05),
                 Size = UDim2.new(0, 200 + (i * 25), 0, 40 + (i * 8))
             }
         )
@@ -325,15 +334,15 @@ function LoaderSystem:CreateLoader(Config)
 
                 local flashColors = {
                     Color3.fromRGB(255, 255, 255),
-                    Color3.fromRGB(255, 180, 120),
-                    Color3.fromRGB(255, 120, 0)
+                    Color3.fromRGB(220, 220, 220),
+                    Color3.fromRGB(160, 160, 160)
                 }
                 local originalColor = TitleLabel.TextStrokeColor3
                 TitleLabel.TextStrokeColor3 = flashColors[math.random(1, 3)]
                 TweenService:Create(TitleLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextStrokeColor3 = originalColor}):Play()
 
-                TweenService:Create(BorderStroke, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Color = NeonOrange, Transparency = 0.1}):Play()
-                TweenService:Create(BorderStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Color = Red, Transparency = 0.2}):Play()
+                TweenService:Create(BorderStroke, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Color = White, Transparency = 0.05}):Play()
+                TweenService:Create(BorderStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Color = Silver, Transparency = 0.15}):Play()
 
                 wait(0.1)
             end
@@ -391,8 +400,8 @@ function LoaderSystem:CreateLoader(Config)
     for i = 1, 25 do
         local sparkleType = i <= 10 and 1 or (i <= 18 and 2 or 3)
         local sparkleSize = sparkleType == 1 and 2 or (sparkleType == 2 and 3 or 1)
-        local sparkleColor = sparkleType == 1 and Color3.fromRGB(255, 220, 180) or 
-                            (sparkleType == 2 and NeonOrange or Orange)
+        local sparkleColor = sparkleType == 1 and White or 
+                            (sparkleType == 2 and Silver or Gray)
 
         local sparkle = Create("Frame", {
             BackgroundColor3 = sparkleColor,
@@ -426,7 +435,7 @@ function LoaderSystem:CreateLoader(Config)
     end
 
     local scanLine = Create("Frame", {
-        BackgroundColor3 = NeonOrange,
+        BackgroundColor3 = White,
         BackgroundTransparency = 0.85,
         BorderSizePixel = 0,
         Size = UDim2.new(1, -20, 0, 2),
@@ -461,7 +470,7 @@ function LoaderSystem:CreateLoader(Config)
         Create("UICorner", {CornerRadius = UDim.new(0, 10)}, button)
 
         local buttonStroke = Create("UIStroke", {
-            Color = NeonOrange,
+            Color = White,
             Thickness = 1.5,
             Transparency = 0.4
         }, button)
@@ -480,49 +489,51 @@ function LoaderSystem:CreateLoader(Config)
         spawn(function()
             while LoaderGui.Parent and button.Parent do
                 TweenService:Create(buttonStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                    Color = Red, Transparency = 0.7
+                    Color = Silver, Transparency = 0.7
                 }):Play()
                 wait(1.5)
                 if not (LoaderGui.Parent and button.Parent) then break end
                 TweenService:Create(buttonStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                    Color = NeonOrange, Transparency = 0.4
+                    Color = White, Transparency = 0.3
                 }):Play()
                 wait(1.5)
             end
         end)
 
-        return button, buttonGlow
+        return button, buttonGlow, buttonStroke
     end
-
-    local BossFarmingButton, BossFarmingGlow = createEnhancedButton({
-        Font = Enum.Font.FredokaOne,
-        Text = "BOSS FARMING",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 16,
-        BackgroundColor3 = Red,
-        BackgroundTransparency = 0.05,
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0, 50),
-        Name = "BossFarmingButton"
-    }, ButtonsFrame)
 
     local MainScriptButton, MainScriptGlow = createEnhancedButton({
         Font = Enum.Font.FredokaOne,
         Text = "MAIN",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextColor3 = White,
         TextSize = 16,
-        BackgroundColor3 = DeepOrange,
-        BackgroundTransparency = 0.05,
+        BackgroundColor3 = Gray,
+        BackgroundTransparency = 0,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(1, 0, 0, 50),
+        Name = "MainScriptButton"
+    }, ButtonsFrame)
+
+    local BossFarmingButton, BossFarmingGlow = createEnhancedButton({
+        Font = Enum.Font.FredokaOne,
+        Text = "BOSS FARMING",
+        TextColor3 = White,
+        TextSize = 16,
+        BackgroundColor3 = Charcoal,
+        BackgroundTransparency = 0,
         BorderSizePixel = 0,
         Position = UDim2.new(0, 0, 0, 60),
         Size = UDim2.new(1, 0, 0, 50),
-        Name = "MainScriptButton"
+        Name = "BossFarmingButton"
     }, ButtonsFrame)
 
     local function addEnhancedHoverEffect(button, buttonGlow, hoverColor, originalColor)
         button.MouseEnter:Connect(function()
             TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                 BackgroundColor3 = hoverColor,
+                TextColor3 = DarkBlack,
                 Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset + 6, button.Size.Y.Scale, button.Size.Y.Offset + 3),
                 TextSize = button.TextSize + 1,
                 Rotation = math.random(-2, 2)
@@ -536,6 +547,7 @@ function LoaderSystem:CreateLoader(Config)
         button.MouseLeave:Connect(function()
             TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                 BackgroundColor3 = originalColor,
+                TextColor3 = White,
                 Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset - 6, button.Size.Y.Scale, button.Size.Y.Offset - 3),
                 TextSize = button.TextSize - 1,
                 Rotation = 0
@@ -559,21 +571,21 @@ function LoaderSystem:CreateLoader(Config)
         end)
     end
 
-    addEnhancedHoverEffect(BossFarmingButton, BossFarmingGlow, NeonOrange, Red)
-    addEnhancedHoverEffect(MainScriptButton, MainScriptGlow, NeonOrange, DeepOrange)
-
-    BossFarmingButton.Activated:Connect(function()
-        script = Instance.new("LocalScript")
-        script.Name = "KODRuntime"
-        LoaderGui:Destroy()
-        loadstring(game:HttpGet(BossFarmingURL))()
-    end)
+    addEnhancedHoverEffect(MainScriptButton, MainScriptGlow, White, Gray)
+    addEnhancedHoverEffect(BossFarmingButton, BossFarmingGlow, White, Charcoal)
 
     MainScriptButton.Activated:Connect(function()
         script = Instance.new("LocalScript")
         script.Name = "KODRuntime"
         LoaderGui:Destroy()
         loadstring(game:HttpGet(MainScriptURL))()
+    end)
+
+    BossFarmingButton.Activated:Connect(function()
+        script = Instance.new("LocalScript")
+        script.Name = "KODRuntime"
+        LoaderGui:Destroy()
+        loadstring(game:HttpGet(BossFarmingURL))()
     end)
 
     CloseButton.Activated:Connect(function()
